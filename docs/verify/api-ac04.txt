@@ -1,0 +1,8 @@
+# AC-04 actual backend responses (each from the original portfolio)
+buy A01   201 -> HTTP 422 {"error": {"code": "INSUFFICIENT_CASH", "message": "第 1 笔：买入 A01 201 股需 20,100.00 元，可用现金仅 20,000.00 元", "index": 0}}
+sell A01   401 -> HTTP 422 {"error": {"code": "INSUFFICIENT_HOLDING", "message": "第 1 笔：卖出 A01 401 股超过当前模拟持仓 400 股", "index": 0}}
+buy A01     0 -> HTTP 422 {"error": {"code": "INVALID_QUANTITY", "message": "第 1 笔：数量必须是正整数，收到 0", "index": 0}}
+buy A01    -1 -> HTTP 422 {"error": {"code": "INVALID_QUANTITY", "message": "第 1 笔：数量必须是正整数，收到 -1", "index": 0}}
+buy A01   1.5 -> HTTP 422 {"error": {"code": "INVALID_QUANTITY", "message": "第 1 笔：数量必须是正整数，收到 1.5", "index": 0}}
+buy A01   '5' -> HTTP 422 {"error": {"code": "INVALID_QUANTITY", "message": "第 1 笔：数量必须是正整数，收到 '5'", "index": 0}}
+original unchanged after all rejections: True | cash 20000.00
