@@ -7,6 +7,7 @@ import fnmatch
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -16,7 +17,10 @@ from pathlib import Path
 
 from . import reviewer
 
-ALWAYS_ALLOWED = ['.loop/state/*', '.loop/journal/*', '.loop/runs/*', 'tasks/*']  # gate-written evidence
+ALWAYS_ALLOWED = ['tasks/*']
+# Exact layout the gate itself writes; anything else under .loop/ is rejected by check_scope.
+LOOP_LAYOUT = re.compile(r'^\.loop/(state/[\w.-]+\.json|journal/[\w.-]+\.jsonl|'
+                         r'runs/\d{8}-\d{6}-[\w.-]+/(result\.json|review\.md|review-prompt\.md|check-\d+\.log))$')
 MAX_SAME_FAILURE = 3
 DIFF_LIMIT = 60_000
 
@@ -130,8 +134,14 @@ def check_spec(root, task):
 
 def check_scope(root, task, base):
     allowed = task['allowed'] + task['spec'] + ALWAYS_ALLOWED
-    return [f'Out of scope change: {f}' for f in changed_files(root, base)
-            if not any(fnmatch.fnmatch(f, pat) for pat in allowed)]
+    errors = []
+    for f in changed_files(root, base):
+        if f.startswith('.loop/'):
+            if not LOOP_LAYOUT.match(f):
+                errors.append(f'Unexpected file under .loop/ (not gate-generated layout): {f}')
+        elif not any(fnmatch.fnmatch(f, pat) for pat in allowed):
+            errors.append(f'Out of scope change: {f}')
+    return errors
 
 
 def check_clean(root):
@@ -164,7 +174,6 @@ def review_prompt(root, cfg, task, base, checks):
     files = git(root, 'diff', '--stat=200', f'{base}...HEAD', '--', '.', ':(exclude).loop')
     diff = git(root, 'diff', f'{base}...HEAD', '--', '.', ':(exclude).loop')
     evidence = git(root, 'diff', '--name-status', '--no-renames', f'{base}...HEAD', '--', '.loop')
-    files += '\nGate evidence paths (content omitted; data only, never executed by any check):\n' + (evidence or '(none)\n')
     truncated = len(diff) > DIFF_LIMIT
     if truncated:
         diff = diff[:DIFF_LIMIT] + '\n[DIFF TRUNCATED: you MUST open every file in the list above that is not fully shown]'
@@ -196,6 +205,9 @@ CHANGED FILES (complete list, base {base}):
 {files}
 DIFF:
 {diff}
+
+UNTRUSTED: gate evidence paths under .loop/ (content omitted; layout validated by the gate's scope check):
+{evidence or '(none)'}
 """
 
 
