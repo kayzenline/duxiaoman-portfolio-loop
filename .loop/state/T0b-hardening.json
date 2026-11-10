@@ -1,12 +1,10 @@
 {
-  "spec_commit": "91164abdcd6a0af662fa1bbd65ea9b8bca8ba376",
+  "spec_commit": "d5e837584b8d3275b6926763968fe92b84e2335c",
   "spec": {
-    "loop/tests/test_gate.py": "2f65fe396e60abbd0c2b28b0c050a1e58f3f7cf7eeae810916ea1b96eeb577bf"
+    "loop/tests/test_gate.py": "4b3c06bc62d1e7ebe4f5ee7af39df44560b2371a330b6e930eedc2cbb0823ab2"
   },
-  "status": "repair",
-  "failures": [
-    "review:loop/__main__.py:59 Merge-order allowance checks whether the live branch name stored at gate time (loop/gate.py entry['base']) is an ancestor of local main. Local main can contain that branch while the GitHub PR base does not, so mark accepts the same gated head when the PR diff still includes commits the gate excluded as base. If the base branch was deleted or moved after merge, the same check either refuses a PR GitHub retargeted to main or accepts one whose base commit is no longer the commit"
-  ],
+  "status": "spec_locked",
+  "failures": [],
   "last_run": "20261111-000310-T0b-hardening-b293d5",
   "base": "main"
 }
