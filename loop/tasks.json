@@ -1,0 +1,55 @@
+{
+  "reviewer": {
+    "argv": ["cursor-agent", "--trust", "--print", "--output-format", "stream-json", "--mode", "ask"],
+    "model": "grok-4.7-high",
+    "idle_timeout": 240,
+    "total_timeout": 1500
+  },
+  "tasks": [
+    {
+      "id": "T0-loop",
+      "goal": "Loop gate itself: spec lock, scope check, clean-tree check, checks, read-only Grok review with streamed idle timeout, progress-aware blocking rule, CLI and docs.",
+      "allowed": ["loop/*", "AGENTS.md", "README.md", ".github/*", ".gitignore"],
+      "spec": ["loop/tests/test_gate.py"],
+      "checks": [["python3", "-m", "unittest", "discover", "-s", "loop/tests", "-t", "."]]
+    },
+    {
+      "id": "T1-engine",
+      "goal": "Pure domain engine (FR-01/02/03 calculation core): load seed snapshot, valuation in integer cents, concentration alerts with strict > thresholds using unrounded exact comparison, sequential buy/sell replay from the original portfolio with validation (known symbol, positive JSON integer quantity, non-negative cash, no oversell) where a failing op reports its index and leaves the last valid result unchanged, comparison of original vs simulated. Covers AC-01..AC-04 at the engine level.",
+      "allowed": ["backend/portfolio/*", "pyproject.toml", "uv.lock"],
+      "spec": ["backend/tests/test_engine.py"],
+      "checks": [["uv", "run", "--frozen", "pytest", "-q", "backend/tests/test_engine.py"]]
+    },
+    {
+      "id": "T2-api",
+      "goal": "FastAPI HTTP layer + SQLite persistence (FR-04/05): GET portfolio, POST simulate, POST/GET scenarios. Scenarios store name + snapshot id + ordered ops; reopening replays them on the backend. Clear 4xx error bodies. AC-04 over HTTP, AC-05 including a real server process restart. Original portfolio never mutated.",
+      "allowed": ["backend/portfolio/*", "pyproject.toml", "uv.lock"],
+      "spec": ["backend/tests/test_api.py", "backend/tests/test_restart.py"],
+      "checks": [["uv", "run", "--frozen", "pytest", "-q", "backend/tests"]]
+    },
+    {
+      "id": "T3-frontend",
+      "goal": "React+TypeScript UI served by the backend: overview (totals, holdings, weights, industry distribution, snapshot time, alerts with object/actual/threshold), ordered op builder, original-vs-simulated comparison, explicit loading/empty/error states, save with name, list and reopen saved scenarios. All numbers come from the backend; the UI never recomputes business values.",
+      "allowed": ["frontend/*", "backend/portfolio/*"],
+      "spec": ["e2e/flow.spec.ts"],
+      "checks": [
+        ["npm", "--prefix", "frontend", "ci"],
+        ["npm", "--prefix", "frontend", "run", "build"],
+        ["uv", "run", "--frozen", "pytest", "-q", "backend/tests"],
+        ["npm", "--prefix", "e2e", "test"]
+      ],
+      "check_timeout": 900
+    },
+    {
+      "id": "T4-delivery",
+      "goal": "Delivery: README (versions, install, init, start, URL, reopen steps), DESIGN.md (2-4 pages incl. AI collaboration record with at least one real verification), VERIFY.md (step/expected/actual/pass for AC-01..05 with screenshots), four screenshots, clean-clone install+start check script. Documents must match the actual code and loop evidence; nothing fabricated.",
+      "allowed": ["README.md", "DESIGN.md", "VERIFY.md", "docs/*", "scripts/*", "e2e/*", "Dockerfile", ".dockerignore"],
+      "spec": ["scripts/check_docs.py"],
+      "checks": [
+        ["python3", "scripts/check_docs.py"],
+        ["bash", "scripts/clean_install_check.sh"]
+      ],
+      "check_timeout": 1200
+    }
+  ]
+}
