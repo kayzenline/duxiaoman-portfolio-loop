@@ -1,0 +1,37 @@
+[
+  {
+    "path": "context/originals/recruitment-01.png",
+    "bytes": 1664222,
+    "sha256": "e92d61468c3270d433ef1b883d0ddcf8d87dde61e833ed8b6b077d6ad419645e"
+  },
+  {
+    "path": "context/originals/recruitment-02.png",
+    "bytes": 1595797,
+    "sha256": "9265139a8fec6b92bce9b33b7f3c9f5ec7205bd1d74786688084897e39ed8411"
+  },
+  {
+    "path": "context/originals/recruitment-03.png",
+    "bytes": 1522521,
+    "sha256": "ff16f4d1ebdec60cb122681e43b432d4ea484e16c2171f1b86ed3b596345275a"
+  },
+  {
+    "path": "context/originals/recruitment-04.png",
+    "bytes": 1021480,
+    "sha256": "8ba109c000feadedac7efceaa72832d9d132b17a3db56a035e6413b728414031"
+  },
+  {
+    "path": "context/originals/recruitment-05.png",
+    "bytes": 1014810,
+    "sha256": "aa5adee731520e51af6253d8f3d374d16d33191fc8db92d7dd4916ec46dec3cf"
+  },
+  {
+    "path": "context/originals/度小满_全栈开发实习_技术测评任务.pdf",
+    "bytes": 114905,
+    "sha256": "a205d8adc1b2aa8211bd26e7aad229607c3a0a16f57a1523651e00cbe73aa82d"
+  },
+  {
+    "path": "context/originals/投资组合示例数据.json",
+    "bytes": 1304,
+    "sha256": "46fe51f57c21f34636b727df1b888bf501ee4b800c95fb36db2b803d071be6d7"
+  }
+]
