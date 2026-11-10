@@ -160,8 +160,9 @@ def run_checks(root, task, evidence):
 
 
 def review_prompt(root, cfg, task, base, checks):
-    files = git(root, 'diff', '--stat=200', f'{base}...HEAD')
-    diff = git(root, 'diff', f'{base}...HEAD')
+    # Gate evidence (.loop/) is excluded: it is not implementation and old prompts would bloat the diff.
+    files = git(root, 'diff', '--stat=200', f'{base}...HEAD', '--', '.', ':(exclude).loop')
+    diff = git(root, 'diff', f'{base}...HEAD', '--', '.', ':(exclude).loop')
     truncated = len(diff) > DIFF_LIMIT
     if truncated:
         diff = diff[:DIFF_LIMIT] + '\n[DIFF TRUNCATED: you MUST open every file in the list above that is not fully shown]'

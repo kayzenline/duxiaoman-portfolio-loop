@@ -91,10 +91,13 @@
       "allowed": [
         "frontend/*",
         "backend/portfolio/*",
-        "e2e/*"
+        "e2e/.gitignore"
       ],
       "spec": [
-        "e2e/flow.spec.ts"
+        "e2e/flow.spec.ts",
+        "e2e/playwright.config.ts",
+        "e2e/package.json",
+        "e2e/package-lock.json"
       ],
       "checks": [
         [
