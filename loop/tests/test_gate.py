@@ -92,7 +92,7 @@ class Streaming(unittest.TestCase):
         script.write_text('import json, time\nprint(json.dumps({"type": "result", "is_error": False, '
                           '"result": "kept"}), flush=True)\ntime.sleep(30)\n')
         code, text = r.stream([sys.executable, str(script)], 'p', self.tmp, self.tmp / 'o.jsonl', 2, 60)
-        self.assertEqual(text, 'kept')
+        self.assertEqual((code, text), (0, 'kept'))
 
     def test_idle_timeout_kills_reviewer(self):
         with self.assertRaisesRegex(r.ReviewError, 'idle'):
@@ -264,6 +264,32 @@ class GateFlow(unittest.TestCase):
         self.commit('src/sneaky.py', 'y = 2\n')
         pr['headRefOid'] = self.rev()
         self.assertTrue(any('beyond gate evidence' in e for e in g.verify_pr(self.root, entry, 'T', pr, False)))
+
+    def test_verify_pr_rejects_off_layout_loop_path_after_pass(self):
+        self.commit('src/x.py', 'x = 1\n')
+        g.gate(self.root, 'T')
+        entry = g.read_state(self.root)['tasks']['T']
+        bad = self.root / '.loop/runs/20261111-000000-T-abc123/payload.sh'
+        bad.parent.mkdir(parents=True, exist_ok=True)
+        bad.write_text('echo hi\n')
+        self.sh('git', 'add', '-f', str(bad))
+        self.sh('git', 'commit', '-qm', 'odd evidence')
+        pr = {'headRefOid': self.rev(), 'baseRefOid': self.rev('main'), 'state': 'OPEN'}
+        self.assertTrue(any('beyond gate evidence' in e for e in g.verify_pr(self.root, entry, 'T', pr, False)))
+
+    def test_unreachable_origin_fails_closed(self):
+        self.commit('src/x.py', 'x = 1\n')
+        self.sh('git', 'remote', 'add', 'origin', str(self.root / 'no-such-remote.git'))
+        record, status = g.gate(self.root, 'T')
+        self.assertEqual(record['stage'], 'spec')
+        self.assertIn('Cannot verify', record['errors'][0])
+
+    def test_gate_tag_records_reviewed_base(self):
+        self.commit('src/x.py', 'x = 1\n')
+        record, _ = g.gate(self.root, 'T')
+        note = self.sh('git', 'tag', '-l', '--format=%(contents)', 'gate/T').stdout.decode()
+        self.assertIn(f"base_sha={record['base_sha']}", note)
+        self.assertEqual(record['base_sha'], self.rev('main'))
 
     def test_verify_pr_refuses_ungated_task(self):
         pr = {'headRefOid': self.rev(), 'baseRefOid': self.rev('main'), 'state': 'OPEN'}
