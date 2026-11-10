@@ -1,0 +1,11 @@
+{
+  "run": "20261110-235926-T3-frontend-bd3f56",
+  "task": "T3-frontend",
+  "head": "f46148c8ea0ef863051a35bd681e1c45ea84dba2",
+  "started": "2026-11-10T23:59:26+1100",
+  "stage": "scope",
+  "errors": [
+    "Unexpected file under .loop/ (not gate-generated layout): .loop/runs/20261110-235913-T3-frontend-460924/"
+  ],
+  "finished": "2026-11-10T23:59:27+1100"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "portfolio-lab-e2e",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  }
+}

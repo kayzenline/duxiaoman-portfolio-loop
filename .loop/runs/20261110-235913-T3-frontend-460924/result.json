@@ -1,0 +1,26 @@
+{
+  "run": "20261110-235913-T3-frontend-460924",
+  "task": "T3-frontend",
+  "head": "f46148c8ea0ef863051a35bd681e1c45ea84dba2",
+  "started": "2026-11-10T23:59:13+1100",
+  "stage": "scope",
+  "errors": [
+    "Out of scope change: .github/workflows/ci.yml",
+    "Out of scope change: .gitignore",
+    "Out of scope change: AGENTS.md",
+    "Out of scope change: backend/tests/test_api.py",
+    "Out of scope change: backend/tests/test_engine.py",
+    "Out of scope change: backend/tests/test_restart.py",
+    "Out of scope change: loop/README.md",
+    "Out of scope change: loop/__init__.py",
+    "Out of scope change: loop/__main__.py",
+    "Out of scope change: loop/gate.py",
+    "Out of scope change: loop/reviewer.py",
+    "Out of scope change: loop/tasks.json",
+    "Out of scope change: loop/tests/__init__.py",
+    "Out of scope change: loop/tests/test_gate.py",
+    "Out of scope change: pyproject.toml",
+    "Out of scope change: uv.lock"
+  ],
+  "finished": "2026-11-10T23:59:14+1100"
+}

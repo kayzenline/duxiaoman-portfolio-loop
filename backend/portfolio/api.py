@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -47,6 +48,11 @@ def create_app(db_path, snapshot_path=engine.SEED):
     @app.exception_handler(ApiError)
     async def _api_error(_, exc):
         return error(exc.status, exc.code, exc.message, exc.index)
+
+    @app.exception_handler(RequestValidationError)
+    async def _validation_error(_, exc):
+        # e.g. /api/scenarios/abc — keep the single error shape for framework-level validation too
+        return error(422, 'INVALID_REQUEST', '请求参数格式错误')
 
     def run(ops):
         try:
@@ -108,7 +114,7 @@ def create_app(db_path, snapshot_path=engine.SEED):
     def api_404(rest):
         raise ApiError(404, 'NOT_FOUND', f'接口 /api/{rest} 不存在')
 
-    if DIST.is_dir():  # production: serve the built SPA from the same process
+    if (DIST / 'index.html').is_file() and (DIST / 'assets').is_dir():  # production: serve the built SPA
         app.mount('/assets', StaticFiles(directory=DIST / 'assets'), name='assets')
 
         @app.get('/{rest:path}', include_in_schema=False)
