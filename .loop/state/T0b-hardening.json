@@ -3,9 +3,11 @@
   "spec": {
     "loop/tests/test_gate.py": "4b3c06bc62d1e7ebe4f5ee7af39df44560b2371a330b6e930eedc2cbb0823ab2"
   },
-  "status": "needs_review",
-  "failures": [],
-  "last_run": "20261111-003105-T0b-hardening-530973",
+  "status": "repair",
+  "failures": [
+    "review:loop/gate.py:143 Offline-tolerant remote tag lookup is not implemented. remote_tag maps timeout and any non-zero ls-remote to UNREACHABLE, and check_spec refuses to pass. A repo with origin configured still cannot gate offline; the old bug was a failed ls-remote reported as a spec mismatch, and this still fails the gate. Skip the origin comparison when the query cannot reach origin, and keep failing closed when the query succeeds and the tag is missing or different. No test simulates a failed ls"
+  ],
+  "last_run": "20261111-003132-T0b-hardening-e47a15",
   "base": "main",
   "base_sha": "ddae3c91222af94f1d292ea7f207db9e592e3616"
 }

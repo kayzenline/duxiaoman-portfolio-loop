@@ -3,3 +3,4 @@
 {"at": "2026-11-11T00:27:50+1100", "task": "T0b-hardening", "event": "gate", "stage": "review", "status": "repair", "run": "20261111-000310-T0b-hardening-b293d5", "head": "bbc419770866e253d95b73e5170042077e4c6682"}
 {"at": "2026-11-11T00:31:03+1100", "task": "T0b-hardening", "commit": "d5e837584b8d3275b6926763968fe92b84e2335c", "event": "spec_relocked", "reason": "Grok round 1: mark lacked tests and base check must compare merge-base SHAs"}
 {"at": "2026-11-11T00:31:30+1100", "task": "T0b-hardening", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-003105-T0b-hardening-530973", "head": "24abed19f20141faba1f01f34ac32ba01bf9ae2d"}
+{"at": "2026-11-11T00:48:25+1100", "task": "T0b-hardening", "event": "gate", "stage": "review", "status": "repair", "run": "20261111-003132-T0b-hardening-e47a15", "head": "f66eb93f5920fc688e7f2f9167592c8f136b85e3"}

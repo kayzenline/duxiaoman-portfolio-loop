@@ -1,0 +1,46 @@
+{
+  "run": "20261111-003132-T0b-hardening-e47a15",
+  "task": "T0b-hardening",
+  "head": "f66eb93f5920fc688e7f2f9167592c8f136b85e3",
+  "started": "2026-11-11T00:31:32+1100",
+  "stage": "review",
+  "errors": [
+    "loop/gate.py:143 Offline-tolerant remote tag lookup is not implemented. remote_tag maps timeout and any non-zero ls-remote to UNREACHABLE, and check_spec refuses to pass. A repo with origin configured still cannot gate offline; the old bug was a failed ls-remote reported as a spec mismatch, and this still fails the gate. Skip the origin comparison when the query cannot reach origin, and keep failing closed when the query succeeds and the tag is missing or different. No test simulates a failed ls-remote, so the suite does not catch this."
+  ],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "loop/tests",
+        "-t",
+        "."
+      ],
+      "exit": 0,
+      "seconds": 24.2,
+      "log": ".loop/runs/20261111-003132-T0b-hardening-e47a15/check-0.log"
+    }
+  ],
+  "diff_truncated": false,
+  "review": {
+    "verdict": "fail",
+    "blocking": [
+      {
+        "file": "loop/gate.py",
+        "line": 143,
+        "issue": "Offline-tolerant remote tag lookup is not implemented. remote_tag maps timeout and any non-zero ls-remote to UNREACHABLE, and check_spec refuses to pass. A repo with origin configured still cannot gate offline; the old bug was a failed ls-remote reported as a spec mismatch, and this still fails the gate. Skip the origin comparison when the query cannot reach origin, and keep failing closed when the query succeeds and the tag is missing or different. No test simulates a failed ls-remote, so the suite does not catch this."
+      }
+    ],
+    "suggestions": [
+      "lock_spec treats any non-None remote_tag result as a signal to force-push. UNREACHABLE takes that branch, and the push has no timeout and does not set GIT_TERMINAL_PROMPT=0.",
+      "test_result_then_silence_keeps_verdict should assert exit code 0. review() discards the verdict on any non-zero status, and the test only checks the text.",
+      "Add a verify_pr case for a post-pass path under .loop/ that fails LOOP_LAYOUT. The current test covers a valid result.json and a src/ file.",
+      "base_sha is taken from .loop/state/<task>.json, and evidence commits may modify that file. Record the reviewed merge-base on the gate/<task> tag and read it from there.",
+      "loop/README.md still describes mark as head equality plus any .loop/ evidence commit."
+    ]
+  },
+  "finished": "2026-11-11T00:48:25+1100"
+}
