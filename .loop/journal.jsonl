@@ -1,1 +1,0 @@
-{"at": "2026-11-10T22:46:45+1100", "task": "T0-loop", "event": "spec_locked", "reason": "initial spec", "spec": {"loop/tests/test_gate.py": "2b27ab3cabcd446352bb8036ef55397a996b1ae21929ec3115e68942843391e9"}}

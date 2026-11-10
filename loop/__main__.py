@@ -1,6 +1,7 @@
 """python -m loop {status|spec|gate|mark} — see loop/README.md."""
 import argparse
 import json
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -45,8 +46,15 @@ def main(argv=None):
     if a.cmd == 'mark':
         state = g.read_state(root)
         e = state['tasks'].setdefault(a.task, {})
-        if a.status == 'merged' and e.get('status') not in ('gate_passed', 'pr_open'):
+        if e.get('status') not in ('gate_passed', 'pr_open'):
             sys.exit('Refusing: task has not passed the gate')
+        pr = json.loads(subprocess.run(['gh', 'pr', 'view', a.pr, '--json', 'headRefOid,state,url'],
+                                       check=True, capture_output=True, text=True, cwd=root).stdout)
+        if pr['headRefOid'] != e.get('passed_head'):
+            sys.exit(f"Refusing: PR head {pr['headRefOid'][:8]} != gate-passed head {str(e.get('passed_head'))[:8]}")
+        if a.status == 'merged' and pr['state'] != 'MERGED':
+            sys.exit(f"Refusing: PR state is {pr['state']}")
+        a.pr = pr['url']
         e.update(status=a.status, pr=a.pr)
         g.write_state(root, state)
         g.journal(root, {'at': time.strftime('%FT%T%z'), 'task': a.task, 'event': a.status, 'pr': a.pr})
