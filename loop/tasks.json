@@ -42,7 +42,7 @@
     },
     {
       "id": "T0b-hardening",
-      "goal": "Loop follow-up: adopt Grok round-4 suggestions and the peer-session merge-order finding — untracked-files=all, mark verifies PR baseRefName against gate base and LOOP_LAYOUT for evidence commits, relock with unchanged hashes keeps failures, stream parses a trailing line and never idles out after a result, offline-tolerant remote tag lookup, -z in check_spec, T4 no longer overlaps T3 spec.",
+      "goal": "Loop follow-up: adopt Grok round-4 suggestions and the peer-session merge-order finding — untracked-files=all, mark verifies PR baseRefName against gate base and LOOP_LAYOUT for evidence commits, relock with unchanged hashes keeps failures, stream parses a trailing line and never idles out after a result, remote spec-tag lookup that FAILS CLOSED when origin is configured but unreachable (decision after security review: a Grok review needs network anyway, so offline gating has no value; bounded by timeout and GIT_TERMINAL_PROMPT=0), reviewed merge-base fixed at gate start and stored on an annotated gate/<task> tag, -z in check_spec, T4 no longer overlaps T3 spec.",
       "allowed": [
         "loop/*",
         "AGENTS.md",

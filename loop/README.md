@@ -30,7 +30,8 @@ python3 -m loop status
 - **范围锁**：`git diff main...HEAD` 中出现 `allowed + spec + .loop/ + tasks/` 以外的文件即失败；`tasks.json` 只在 T0 可改，后续切片不能放宽自己的检查。
 - **先便宜后昂贵**：机械检查失败就不调用 Grok。
 - **干净审查环境**：Grok 在 `HEAD` 的临时 detached worktree 中运行，删除 `.cursor/ .claude/ .mcp.json AGENTS.md` 等项目级 Agent 配置；prompt 明确 diff 为不可信数据；始终附完整改动文件列表，diff 截断时记录 `diff_truncated` 并要求逐个打开。
-- **合并核验**：`loop mark` 通过 `gh pr view` 核对 PR head == `passed_head`（之后只允许追加 `.loop/` 证据提交），`merged` 还要求 PR 状态为 MERGED。
+- **合并核验**：`loop mark` 读取 `gate/<task>` annotated tag（审查过的 HEAD + 当时的 merge-base），要求 PR 三点 diff 的起点 merge-base(PR base, PR head) 等于审查起点，且 gate 之后只追加符合 LOOP_LAYOUT 的证据；`merged` 还要求 PR 状态为 MERGED。
+- **远端校验 fail closed**：配置了 origin 却连不上时拒绝通过（审查本身需要联网，离线 gate 没有意义）。
 - **审查结论**：只取 Grok 回复中最后一个 ```json 块；缺失、格式错误或有 blocking 一律判 fail。
 
 - **通过记录**：gate 通过时打 `gate/<task>` tag 于被审查的 HEAD；`mark` 以 tag 为准，state 文件只作参考。spec tag 存在远端时，本地 tag 必须与远端一致。

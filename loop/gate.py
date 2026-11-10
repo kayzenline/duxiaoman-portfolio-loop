@@ -71,7 +71,7 @@ def git(root, *args):
 
 def changed_files(root, base):
     # --no-renames: a rename shows as delete + add, so the source path cannot hide. -z: exact names.
-    committed = [f for f in git(root, 'diff', '--name-only', '--no-renames', '-z', f'{base}...HEAD').split('\0') if f]
+    committed = [f for f in git(root, 'diff', '--name-only', '--no-renames', '-z', f'{base}..HEAD').split('\0') if f]
     entries = git(root, 'status', '--porcelain', '--no-renames', '--untracked-files=all', '-z').split('\0')
     dirty = [e[3:] for e in entries if e]
     return sorted(set(committed + dirty))
@@ -97,8 +97,12 @@ def lock_spec(root, task_id, reason):
     if relock and reason == 'initial spec':
         raise SystemExit(f'{tag} exists; re-locking requires --reason')
     git(root, 'tag', '-f', tag, 'HEAD')
-    if remote_tag(root, tag) is not None:  # push (and fail loudly) whenever an origin is configured
-        git(root, 'push', '-f', 'origin', f'refs/tags/{tag}')
+    remote = remote_tag(root, tag)
+    if remote is UNREACHABLE:
+        raise SystemExit('origin is configured but unreachable; cannot publish the spec lock')
+    if remote is not None:
+        subprocess.run(['git', 'push', '-f', 'origin', f'refs/tags/{tag}'], cwd=root, check=True, timeout=60,
+                       capture_output=True, env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
     head = git(root, 'rev-parse', 'HEAD').strip()
     hashes = {p: sha(root / p) for p in t['spec']}
     entry = state['tasks'].setdefault(task_id, {})
@@ -186,9 +190,10 @@ def run_checks(root, task, evidence):
 
 def review_prompt(root, cfg, task, base, checks):
     # Gate evidence (.loop/) is excluded: it is not implementation and old prompts would bloat the diff.
-    files = git(root, 'diff', '--stat=200', f'{base}...HEAD', '--', '.', ':(exclude).loop')
-    diff = git(root, 'diff', f'{base}...HEAD', '--', '.', ':(exclude).loop')
-    evidence = git(root, 'diff', '--name-status', '--no-renames', f'{base}...HEAD', '--', '.loop')
+    # `base` here is the merge-base SHA fixed at gate start, so this is exactly the reviewed range.
+    files = git(root, 'diff', '--stat=200', f'{base}..HEAD', '--', '.', ':(exclude).loop')
+    diff = git(root, 'diff', f'{base}..HEAD', '--', '.', ':(exclude).loop')
+    evidence = git(root, 'diff', '--name-status', '--no-renames', f'{base}..HEAD', '--', '.loop')
     truncated = len(diff) > DIFF_LIMIT
     if truncated:
         diff = diff[:DIFF_LIMIT] + '\n[DIFF TRUNCATED: you MUST open every file in the list above that is not fully shown]'
@@ -252,11 +257,14 @@ def gate(root, task_id, base='main', skip_review=False):
     run_id = time.strftime('%Y%m%d-%H%M%S-') + task_id + '-' + uuid.uuid4().hex[:6]
     evidence = root / '.loop' / 'runs' / run_id
     evidence.mkdir(parents=True)
-    record = {'run': run_id, 'task': task_id, 'head': git(root, 'rev-parse', 'HEAD').strip(),
+    head = git(root, 'rev-parse', 'HEAD').strip()
+    # Fixed once: scope, reviewer diff and the recorded pass all use this same range (no TOCTOU).
+    base_sha = git(root, 'merge-base', base, head).strip()
+    record = {'run': run_id, 'task': task_id, 'head': head, 'base': base, 'base_sha': base_sha,
               'started': time.strftime('%FT%T%z'), 'stage': None, 'errors': []}
 
     for stage, fn in (('spec', lambda: check_spec(root, task)),
-                      ('scope', lambda: check_scope(root, task, base)),
+                      ('scope', lambda: check_scope(root, task, base_sha)),
                       ('clean', lambda: check_clean(root))):
         errors = fn()
         if errors:
@@ -277,7 +285,7 @@ def gate(root, task_id, base='main', skip_review=False):
         else:
             workspace = Path(tempfile.mkdtemp(prefix='loop-review-')) / 'ws'
             try:
-                truncated, prompt = review_prompt(root, cfg, task, base, record['checks'])
+                truncated, prompt = review_prompt(root, cfg, task, base_sha, record['checks'])
                 record['diff_truncated'] = truncated
                 clean_checkout(root, record['head'], workspace)
                 v = reviewer.review(cfg['reviewer'], workspace, prompt, evidence)
@@ -298,7 +306,8 @@ def gate(root, task_id, base='main', skip_review=False):
 
     if record['stage'] == 'passed':
         entry.update(status='gate_passed', failures=[], last_pass=run_id, passed_head=record['head'])
-        git(root, 'tag', '-f', f'gate/{task_id}', record['head'])  # authoritative pass record
+        # Authoritative pass record: annotated tag on the reviewed head carrying the reviewed base.
+        git(root, 'tag', '-f', '-a', f'gate/{task_id}', '-m', f'base_sha={base_sha}\nrun={run_id}', head)
     elif record['stage'] in ('review_skipped', 'review_infra'):
         entry['status'] = 'needs_review'
     else:
@@ -309,8 +318,7 @@ def gate(root, task_id, base='main', skip_review=False):
         same = len(fails) >= MAX_SAME_FAILURE and len(set(fails[-MAX_SAME_FAILURE:])) == 1
         entry['status'] = 'blocked' if same else 'repair'
     entry['last_run'] = run_id
-    entry['base'] = base
-    entry['base_sha'] = git(root, 'merge-base', base, 'HEAD').strip()  # the diff the reviewer saw starts here
+    entry['base'] = base  # advisory; verify_pr reads base_sha from the gate tag
     write_state(root, state)
     journal(root, {'at': record['finished'], 'task': task_id, 'event': 'gate',
                    'stage': record['stage'], 'status': entry['status'], 'run': run_id, 'head': record['head']})
@@ -330,13 +338,18 @@ def verify_pr(root, entry, task_id, pr, want_merged):
                          cwd=root, capture_output=True, text=True).stdout.strip()
     if not tag or tag != entry.get('passed_head'):
         return [f'gate/{task_id} tag missing or disagrees with state; re-run the gate']
+    note = subprocess.run(['git', 'tag', '-l', '--format=%(contents)', f'gate/{task_id}'],
+                          cwd=root, capture_output=True, text=True).stdout
+    reviewed = dict(line.split('=', 1) for line in note.splitlines() if '=' in line).get('base_sha')
+    if not reviewed:
+        return [f'gate/{task_id} tag carries no reviewed base; re-run the gate']
     mb = subprocess.run(['git', 'merge-base', pr['baseRefOid'], pr['headRefOid']],
                         cwd=root, capture_output=True, text=True)
     if mb.returncode:
         return ['PR base/head commits not available locally; fetch first (failing closed)']
-    if mb.stdout.strip() != entry.get('base_sha'):
+    if mb.stdout.strip() != reviewed:
         errors.append(f"PR diff starts at {mb.stdout.strip()[:8]}, gate reviewed from "
-                      f"{str(entry.get('base_sha'))[:8]}: the PR would show unreviewed changes")
+                      f"{reviewed[:8]}: the PR would show unreviewed changes")
     if pr['headRefOid'] != tag:
         res = subprocess.run(['git', 'diff', '--name-status', '--no-renames', '-z', f'{tag}..{pr["headRefOid"]}'],
                              cwd=root, capture_output=True, text=True)
