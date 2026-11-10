@@ -1,0 +1,29 @@
+{
+  "run": "20261111-003144-T4-delivery-4887d3",
+  "task": "T4-delivery",
+  "head": "a81447739f21ca8b7fd0111bc61d8c6a148eec15",
+  "started": "2026-11-11T00:31:44+1100",
+  "stage": "review_skipped",
+  "errors": [],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "scripts/check_docs.py"
+      ],
+      "exit": 0,
+      "seconds": 0.1,
+      "log": ".loop/runs/20261111-003144-T4-delivery-4887d3/check-0.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/clean_install_check.sh"
+      ],
+      "exit": 0,
+      "seconds": 5.1,
+      "log": ".loop/runs/20261111-003144-T4-delivery-4887d3/check-1.log"
+    }
+  ],
+  "finished": "2026-11-11T00:31:50+1100"
+}

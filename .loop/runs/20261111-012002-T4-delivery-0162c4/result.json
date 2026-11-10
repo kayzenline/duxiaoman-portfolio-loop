@@ -1,0 +1,53 @@
+{
+  "run": "20261111-012002-T4-delivery-0162c4",
+  "task": "T4-delivery",
+  "head": "15dbafa4d8bf9d7a7067149b37c23d4d61d70d85",
+  "started": "2026-11-11T01:20:02+1100",
+  "stage": "review",
+  "errors": [
+    "docs/ai-collaboration.md:39 Interaction 5 says faa64f claimed docs/verify/clean-install.txt lacked a version line, and that tail -1 printed \"CLEAN INSTALL CHECK PASSED (Python 3.12.9, node v22.22.0)\", so the finding was false. review.md says the file ended at \"CLEAN INSTALL CHECK PASSED\" while the script and 43b9c5/check-1.log printed the versioned line. The committed file and 1be7d1/check-1.log now end with \"CLEAN INSTALL CHECK PASSED (Python 3.12.9, uv 0.12.23, node v22.22.0, npm 10.9.4)\", which is not the quoted tail.",
+    "DESIGN.md:134 The T4 summary says two accuracy findings were checked and did not hold. The d8583a json.loads(1.0)->int claim is a real miss, confirmed by 7fe998 and docs/verify/api-ac04.txt. The second is interaction 5, which misstates faa64f and quotes a tail line that is not in docs/verify/clean-install.txt."
+  ],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "scripts/check_docs.py"
+      ],
+      "exit": 0,
+      "seconds": 0.1,
+      "log": ".loop/runs/20261111-012002-T4-delivery-0162c4/check-0.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/clean_install_check.sh"
+      ],
+      "exit": 0,
+      "seconds": 5.3,
+      "log": ".loop/runs/20261111-012002-T4-delivery-0162c4/check-1.log"
+    }
+  ],
+  "diff_truncated": false,
+  "review": {
+    "verdict": "fail",
+    "blocking": [
+      {
+        "file": "docs/ai-collaboration.md",
+        "line": 39,
+        "issue": "Interaction 5 says faa64f claimed docs/verify/clean-install.txt lacked a version line, and that tail -1 printed \"CLEAN INSTALL CHECK PASSED (Python 3.12.9, node v22.22.0)\", so the finding was false. review.md says the file ended at \"CLEAN INSTALL CHECK PASSED\" while the script and 43b9c5/check-1.log printed the versioned line. The committed file and 1be7d1/check-1.log now end with \"CLEAN INSTALL CHECK PASSED (Python 3.12.9, uv 0.12.23, node v22.22.0, npm 10.9.4)\", which is not the quoted tail."
+      },
+      {
+        "file": "DESIGN.md",
+        "line": 134,
+        "issue": "The T4 summary says two accuracy findings were checked and did not hold. The d8583a json.loads(1.0)->int claim is a real miss, confirmed by 7fe998 and docs/verify/api-ac04.txt. The second is interaction 5, which misstates faa64f and quotes a tail line that is not in docs/verify/clean-install.txt."
+      }
+    ],
+    "suggestions": [
+      "Describe faa64f as a real mismatch between clean-install.txt and the script stdout, and record that this revision aligned the echo line, docs/verify/clean-install.txt, and the check log (including uv and npm).",
+      "Add runs 20261111-010532-T4-delivery-43b9c5 and 20261111-010541-T4-delivery-faa64f to the gate tables in docs/ai-collaboration.md and VERIFY.md; the journal already has both, and VERIFY still points the last round at a PR description.",
+      "After restart, assert valuation.positions.0.symbol is A01 and positions.1.symbol is A02 next to the quantity 400 checks. The first portfolio fetch checks A01's symbol; the isolation fetch checks quantities only."
+    ]
+  },
+  "finished": "2026-11-11T01:27:49+1100"
+}

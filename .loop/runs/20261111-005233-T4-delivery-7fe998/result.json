@@ -1,0 +1,40 @@
+{
+  "run": "20261111-005233-T4-delivery-7fe998",
+  "task": "T4-delivery",
+  "head": "93b1b2936831da93ab2dbfa596abc79f19720d36",
+  "started": "2026-11-11T00:52:33+1100",
+  "stage": "passed",
+  "errors": [],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "scripts/check_docs.py"
+      ],
+      "exit": 0,
+      "seconds": 0.1,
+      "log": ".loop/runs/20261111-005233-T4-delivery-7fe998/check-0.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/clean_install_check.sh"
+      ],
+      "exit": 0,
+      "seconds": 5.1,
+      "log": ".loop/runs/20261111-005233-T4-delivery-7fe998/check-1.log"
+    }
+  ],
+  "diff_truncated": false,
+  "review": {
+    "verdict": "pass",
+    "blocking": [],
+    "suggestions": [
+      "docs/security-review-log.md rows 14 and 15 do not match loop/gate.py. remote_tag ignores a failed ls-remote and returns ''; check_spec (line 129) treats that empty string as a tag mismatch, so an unreachable origin already fails closed on this tree. Scope resolves base...HEAD before checks and review (gate.py line 244); there is no end-of-gate base_sha. The log places both fixes only on fix/T0b-hardening, which is not in this checkout. DESIGN.md §7 also says the identical-hash failure reset is fixed on T0b, while §6 calls that branch later work and gate.py:105 still clears failures on every relock.",
+      "DESIGN.md §7 and VERIFY.md describe the post-suggestion T4 re-gate without its id. .loop/journal/T4-delivery.jsonl shows 20261111-005224-T4-delivery-ea6321 as review_skipped / needs_review at head 3fed015. The Grok pass is d8583a at 00a380ed, before these doc edits. Name ea6321 and state that the revised pages have a mechanical pass only.",
+      "docs/v1-postmortem/v1-task-config.json sets max_attempts to 1, while 9bd3e591.result.json is attempt 2 and starts about 4ms after 4891cdeb finished its 300s timeout. The 0-byte log claim is only in agent-log-sizes.txt; the log files are not in the tree. One sentence on that automatic retry would make the postmortem match the archived results.",
+      "PLAN.md still specifies integer cross-multiplication for the threshold test. The engine compares Fractions, which still implements strict greater-than. DESIGN.md's difference section does not mention that swap."
+    ]
+  },
+  "finished": "2026-11-11T01:04:54+1100"
+}

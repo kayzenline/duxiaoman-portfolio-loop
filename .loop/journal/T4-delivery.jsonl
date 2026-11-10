@@ -1,0 +1,11 @@
+{"at": "2026-11-11T00:31:42+1100", "task": "T4-delivery", "commit": "99abfe4ccc5d467b20eadfc770a92f2df2a82416", "event": "spec_locked", "reason": "initial spec"}
+{"at": "2026-11-11T00:31:50+1100", "task": "T4-delivery", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-003144-T4-delivery-4887d3", "head": "a81447739f21ca8b7fd0111bc61d8c6a148eec15"}
+{"at": "2026-11-11T00:49:03+1100", "task": "T4-delivery", "event": "gate", "stage": "passed", "status": "gate_passed", "run": "20261111-003155-T4-delivery-d8583a", "head": "00a380eda940417d251c6596b79f9a595dba7d68"}
+{"at": "2026-11-11T00:52:31+1100", "task": "T4-delivery", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-005224-T4-delivery-ea6321", "head": "3fed0159b05e52f2c6158530659aba38e257a7b7"}
+{"at": "2026-11-11T01:04:54+1100", "task": "T4-delivery", "event": "gate", "stage": "passed", "status": "gate_passed", "run": "20261111-005233-T4-delivery-7fe998", "head": "93b1b2936831da93ab2dbfa596abc79f19720d36"}
+{"at": "2026-11-11T01:05:39+1100", "task": "T4-delivery", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-010532-T4-delivery-43b9c5", "head": "303970bc1774e68dac18da4b453bf00cd49f9102"}
+{"at": "2026-11-11T01:19:00+1100", "task": "T4-delivery", "event": "gate", "stage": "passed", "status": "gate_passed", "run": "20261111-010541-T4-delivery-faa64f", "head": "fe7b8e397d121386c8a90474600dd6cf17eecc05"}
+{"at": "2026-11-11T01:20:00+1100", "task": "T4-delivery", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-011953-T4-delivery-1be7d1", "head": "a78c65394826119d8f7176ba67b263c209855c57"}
+{"at": "2026-11-11T01:27:49+1100", "task": "T4-delivery", "event": "gate", "stage": "review", "status": "repair", "run": "20261111-012002-T4-delivery-0162c4", "head": "15dbafa4d8bf9d7a7067149b37c23d4d61d70d85"}
+{"at": "2026-11-11T01:28:51+1100", "task": "T4-delivery", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-012845-T4-delivery-44070e", "head": "1aba2c887021bb36f630bec40bff3e516554473d"}
+{"at": "2026-11-11T01:40:17+1100", "task": "T4-delivery", "event": "gate", "stage": "passed", "status": "gate_passed", "run": "20261111-012854-T4-delivery-6755dd", "head": "d1ac92f87c0f51d82c82603d6252477abce61ca3"}

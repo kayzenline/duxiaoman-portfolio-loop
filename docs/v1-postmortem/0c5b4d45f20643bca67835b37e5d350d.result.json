@@ -1,0 +1,18 @@
+{
+  "id": "0c5b4d45f20643bca67835b37e5d350d",
+  "task": "source-integrity",
+  "attempt": 1,
+  "adapter": [
+    "python3",
+    "loop/adapters/cursor.py",
+    "--model",
+    "grok-4.7-xhigh",
+    "--mode",
+    "agent",
+    "--allow-writes"
+  ],
+  "started": 1794309123.889632,
+  "checks": [],
+  "error": "Command '['python3', 'loop/adapters/cursor.py', '--model', 'grok-4.7-xhigh', '--mode', 'agent', '--allow-writes']' timed out after 300 seconds",
+  "finished": 1794309423.9275641
+}

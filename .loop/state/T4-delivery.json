@@ -1,0 +1,11 @@
+{
+  "spec_commit": "99abfe4ccc5d467b20eadfc770a92f2df2a82416",
+  "spec": {
+    "scripts/check_docs.py": "a0e926df024cd5085835220fa8c6a86a5d2dfc36c9e81cecad2fb171f8abcb61"
+  },
+  "status": "gate_passed",
+  "failures": [],
+  "last_run": "20261111-012854-T4-delivery-6755dd",
+  "last_pass": "20261111-012854-T4-delivery-6755dd",
+  "passed_head": "d1ac92f87c0f51d82c82603d6252477abce61ca3"
+}

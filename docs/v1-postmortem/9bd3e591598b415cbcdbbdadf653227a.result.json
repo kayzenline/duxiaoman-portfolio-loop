@@ -1,0 +1,18 @@
+{
+  "id": "9bd3e591598b415cbcdbbdadf653227a",
+  "task": "source-integrity",
+  "attempt": 2,
+  "adapter": [
+    "python3",
+    "loop/adapters/cursor.py",
+    "--model",
+    "grok-4.7-xhigh",
+    "--mode",
+    "agent"
+  ],
+  "started": 1794308282.629428,
+  "checks": [],
+  "agent_exit": 143,
+  "error": "Agent command failed",
+  "finished": 1794308338.851727
+}

@@ -1,0 +1,62 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.9, pytest-9.2.0, pluggy-1.7.0 -- /Users/hayashikeibun/Personal/dxm-T4/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/hayashikeibun/Personal/dxm-T4
+configfile: pyproject.toml
+plugins: anyio-4.16.0
+collecting ... collected 47 items
+
+backend/tests/test_api.py::test_health PASSED                            [  2%]
+backend/tests/test_api.py::test_ac01_portfolio_overview PASSED           [  4%]
+backend/tests/test_api.py::test_ac02_ac03_simulation_compares_original_and_simulated PASSED [  6%]
+backend/tests/test_api.py::test_ac04_invalid_ops_get_clear_422_and_change_nothing[op0-INSUFFICIENT_CASH] PASSED [  8%]
+backend/tests/test_api.py::test_ac04_invalid_ops_get_clear_422_and_change_nothing[op1-INSUFFICIENT_HOLDING] PASSED [ 10%]
+backend/tests/test_api.py::test_ac04_invalid_ops_get_clear_422_and_change_nothing[op2-INVALID_QUANTITY] PASSED [ 12%]
+backend/tests/test_api.py::test_ac04_invalid_ops_get_clear_422_and_change_nothing[op3-INVALID_QUANTITY] PASSED [ 14%]
+backend/tests/test_api.py::test_ac04_invalid_ops_get_clear_422_and_change_nothing[op4-INVALID_QUANTITY] PASSED [ 17%]
+backend/tests/test_api.py::test_ac04_invalid_ops_get_clear_422_and_change_nothing[op5-INVALID_QUANTITY] PASSED [ 19%]
+backend/tests/test_api.py::test_ac04_invalid_ops_get_clear_422_and_change_nothing[op6-INVALID_QUANTITY] PASSED [ 21%]
+backend/tests/test_api.py::test_ac04_invalid_ops_get_clear_422_and_change_nothing[op7-UNKNOWN_SYMBOL] PASSED [ 23%]
+backend/tests/test_api.py::test_error_reports_index_of_failing_op PASSED [ 25%]
+backend/tests/test_api.py::test_malformed_bodies_use_same_error_shape[None] PASSED [ 27%]
+backend/tests/test_api.py::test_malformed_bodies_use_same_error_shape[body1] PASSED [ 29%]
+backend/tests/test_api.py::test_malformed_bodies_use_same_error_shape[body2] PASSED [ 31%]
+backend/tests/test_api.py::test_malformed_bodies_use_same_error_shape[body3] PASSED [ 34%]
+backend/tests/test_api.py::test_malformed_bodies_use_same_error_shape[body4] PASSED [ 36%]
+backend/tests/test_api.py::test_ac05_save_list_reopen_and_isolation PASSED [ 38%]
+backend/tests/test_api.py::test_invalid_scenarios_are_not_saved[body0-INVALID_NAME] PASSED [ 40%]
+backend/tests/test_api.py::test_invalid_scenarios_are_not_saved[body1-INVALID_NAME] PASSED [ 42%]
+backend/tests/test_api.py::test_invalid_scenarios_are_not_saved[body2-INVALID_NAME] PASSED [ 44%]
+backend/tests/test_api.py::test_invalid_scenarios_are_not_saved[body3-EMPTY_SCENARIO] PASSED [ 46%]
+backend/tests/test_api.py::test_invalid_scenarios_are_not_saved[body4-INSUFFICIENT_HOLDING] PASSED [ 48%]
+backend/tests/test_api.py::test_name_of_exactly_80_chars_is_allowed PASSED [ 51%]
+backend/tests/test_api.py::test_unknown_scenario_is_404 PASSED           [ 53%]
+backend/tests/test_engine.py::test_seed_is_byte_identical_to_original_attachment PASSED [ 55%]
+backend/tests/test_engine.py::test_snapshot_metadata PASSED              [ 57%]
+backend/tests/test_engine.py::test_ac01_initial_portfolio PASSED         [ 59%]
+backend/tests/test_engine.py::test_ac02_threshold_boundary_is_strict PASSED [ 61%]
+backend/tests/test_engine.py::test_ac03_sequential_ops_use_previous_result PASSED [ 63%]
+backend/tests/test_engine.py::test_ac04_invalid_ops_rejected_without_changing_results[op0-INSUFFICIENT_CASH] PASSED [ 65%]
+backend/tests/test_engine.py::test_ac04_invalid_ops_rejected_without_changing_results[op1-INSUFFICIENT_HOLDING] PASSED [ 68%]
+backend/tests/test_engine.py::test_ac04_invalid_ops_rejected_without_changing_results[op2-INVALID_QUANTITY] PASSED [ 70%]
+backend/tests/test_engine.py::test_ac04_invalid_ops_rejected_without_changing_results[op3-INVALID_QUANTITY] PASSED [ 72%]
+backend/tests/test_engine.py::test_ac04_invalid_ops_rejected_without_changing_results[op4-INVALID_QUANTITY] PASSED [ 74%]
+backend/tests/test_engine.py::test_ac04_invalid_ops_rejected_without_changing_results[op5-INVALID_QUANTITY] PASSED [ 76%]
+backend/tests/test_engine.py::test_ac04_invalid_ops_rejected_without_changing_results[op6-INVALID_QUANTITY] PASSED [ 78%]
+backend/tests/test_engine.py::test_ac04_invalid_ops_rejected_without_changing_results[op7-INVALID_QUANTITY] PASSED [ 80%]
+backend/tests/test_engine.py::test_ac04_invalid_ops_rejected_without_changing_results[op8-INVALID_QUANTITY] PASSED [ 82%]
+backend/tests/test_engine.py::test_ac04_invalid_ops_rejected_without_changing_results[op9-UNKNOWN_SYMBOL] PASSED [ 85%]
+backend/tests/test_engine.py::test_ac04_invalid_ops_rejected_without_changing_results[op10-INVALID_SIDE] PASSED [ 87%]
+backend/tests/test_engine.py::test_exact_cash_boundary_buy_is_allowed PASSED [ 89%]
+backend/tests/test_engine.py::test_failure_mid_sequence_reports_index_and_keeps_prefix_valid PASSED [ 91%]
+backend/tests/test_engine.py::test_simulation_never_mutates_original PASSED [ 93%]
+backend/tests/test_engine.py::test_sold_out_position_stays_visible_with_zero PASSED [ 95%]
+backend/tests/test_engine.py::test_empty_scenario_equals_original PASSED [ 97%]
+backend/tests/test_restart.py::test_ac05_survives_real_process_restart PASSED [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 47 passed, 1 warning in 1.23s =========================
