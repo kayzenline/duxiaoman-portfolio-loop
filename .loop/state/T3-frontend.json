@@ -1,0 +1,8 @@
+{
+  "spec_commit": "8c1d63b54281a8b3ade892f99b313622e2ea6147",
+  "spec": {
+    "e2e/flow.spec.ts": "35afffe06d344f444f0cade91c6389382b599ba76f225081b1ca0be93a5c2387"
+  },
+  "status": "spec_locked",
+  "failures": []
+}
