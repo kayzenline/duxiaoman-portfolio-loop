@@ -80,6 +80,20 @@ class Streaming(unittest.TestCase):
         self.assertIn('"verdict": "pass"', text)
         self.assertIn('"type": "system"', (self.tmp / 'out.jsonl').read_text())
 
+    def test_trailing_result_line_without_newline_is_parsed(self):
+        script = self.tmp / 'nonl.py'
+        script.write_text('import json, sys\nsys.stdout.write(json.dumps({"type": "result", "is_error": False, '
+                          '"result": "ok"}))\n')
+        code, text = r.stream([sys.executable, str(script)], 'p', self.tmp, self.tmp / 'o.jsonl', 5, 30)
+        self.assertEqual((code, text), (0, 'ok'))
+
+    def test_result_then_silence_keeps_verdict(self):
+        script = self.tmp / 'linger.py'
+        script.write_text('import json, time\nprint(json.dumps({"type": "result", "is_error": False, '
+                          '"result": "kept"}), flush=True)\ntime.sleep(30)\n')
+        code, text = r.stream([sys.executable, str(script)], 'p', self.tmp, self.tmp / 'o.jsonl', 2, 60)
+        self.assertEqual(text, 'kept')
+
     def test_idle_timeout_kills_reviewer(self):
         with self.assertRaisesRegex(r.ReviewError, 'idle'):
             self.run_fake('hang', idle=2)
@@ -172,6 +186,42 @@ class GateFlow(unittest.TestCase):
         self.assertEqual(sorted(g.check_clean(self.root)), [
             'Uncommitted change, commit before gating: src/keep.py',
             'Uncommitted change, commit before gating: src/moved.py'])
+
+    def test_changing_failures_stay_in_repair(self):
+        self.commit('src/bad', 'x\n')
+        self.assertEqual(g.gate(self.root, 'T')[1], 'repair')
+        self.commit('other/a.py', 'a\n')   # different failure: scope
+        self.assertEqual(g.gate(self.root, 'T')[1], 'repair')
+        self.sh('git', 'rm', '-q', 'other/a.py')
+        self.sh('git', 'commit', '-qm', 'rm')
+        self.assertEqual(g.gate(self.root, 'T')[1], 'repair')  # checks again, but not 3 in a row
+
+    def test_skip_review_never_passes(self):
+        self.commit('src/x.py', 'x = 1\n')
+        record, status = g.gate(self.root, 'T', skip_review=True)
+        self.assertEqual((record['stage'], status), ('review_skipped', 'needs_review'))
+
+    def test_uncommitted_gate_evidence_does_not_break_scope(self):
+        # make .loop/ visible to git (the real repo commits evidence), on main, then bring it into feat
+        self.sh('git', 'checkout', '-q', 'main')
+        (self.root / '.gitignore').write_text('')
+        self.sh('git', 'commit', '-qam', 'track .loop')
+        self.sh('git', 'checkout', '-q', 'feat')
+        self.sh('git', 'merge', '-q', 'main')
+        self.commit('src/x.py', 'x = 1\n')
+        g.gate(self.root, 'T', skip_review=True)   # leaves an untracked .loop/runs/<run>/ directory
+        self.assertIn('.loop/runs/', self.sh('git', 'status', '--porcelain').stdout.decode())
+        self.assertEqual(g.gate(self.root, 'T')[0]['stage'], 'passed')
+
+    def test_unexpected_loop_paths_are_rejected(self):
+        self.assertIsNone(g.LOOP_LAYOUT.match('.loop/runs/20261110-000000-T-abc/evil.py'))
+        self.assertIsNotNone(g.LOOP_LAYOUT.match('.loop/runs/20261110-000000-T-abc/check-2.log'))
+
+    def test_relock_with_unchanged_spec_keeps_failure_history(self):
+        self.commit('src/bad', 'x\n')
+        g.gate(self.root, 'T')
+        g.lock_spec(self.root, 'T', 'rebased, spec unchanged')
+        self.assertEqual(len(g.read_state(self.root)['tasks']['T']['failures']), 1)
 
     def test_reviewer_fail_then_same_failure_three_times_blocks(self):
         import os
