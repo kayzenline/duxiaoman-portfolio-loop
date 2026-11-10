@@ -1,0 +1,1 @@
+{"at": "2026-11-10T23:05:48+1100", "task": "T0-loop", "commit": "e7a67dc933b288c7687bae9be4ec77b53c5969ad", "event": "spec_locked", "reason": "Grok review round 1 found untested checks-stage stop rule and rename bypass; spec extended"}
