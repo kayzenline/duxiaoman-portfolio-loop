@@ -57,6 +57,8 @@ AFTER=$(curl -fs "http://127.0.0.1:$PORT/api/scenarios/$ID")
 [ "$(echo "$AFTER" | get simulated.positions.1.quantity)" = "500" ]
 P=$(curl -fs "http://127.0.0.1:$PORT/api/portfolio")
 [ "$(echo "$P" | get valuation.cash)" = "20000.00" ]
+[ "$(echo "$P" | get valuation.positions.0.symbol)" = "A01" ]
 [ "$(echo "$P" | get valuation.positions.0.quantity)" = "400" ]
+[ "$(echo "$P" | get valuation.positions.1.symbol)" = "A02" ]
 [ "$(echo "$P" | get valuation.positions.1.quantity)" = "400" ]
 echo "CLEAN INSTALL CHECK PASSED ($(uv run --frozen python --version), $(uv --version | cut -d' ' -f1-2), node $(node --version), npm $(npm --version))"
