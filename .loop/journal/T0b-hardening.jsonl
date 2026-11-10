@@ -1,1 +1,2 @@
 {"at": "2026-11-11T00:02:40+1100", "task": "T0b-hardening", "commit": "91164abdcd6a0af662fa1bbd65ea9b8bca8ba376", "event": "spec_locked", "reason": "initial spec"}
+{"at": "2026-11-11T00:03:05+1100", "task": "T0b-hardening", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-000241-T0b-hardening-9d4061", "head": "47ab626e5c92d23aa2587c92cdaf6849a810478d"}
