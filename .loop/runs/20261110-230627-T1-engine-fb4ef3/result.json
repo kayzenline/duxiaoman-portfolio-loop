@@ -1,0 +1,34 @@
+{
+  "run": "20261110-230627-T1-engine-fb4ef3",
+  "task": "T1-engine",
+  "head": "91e477bcb2985cce33bbc244c66e9551253aa7c7",
+  "started": "2026-11-10T23:06:27+1100",
+  "stage": "passed",
+  "errors": [],
+  "checks": [
+    {
+      "argv": [
+        "uv",
+        "run",
+        "--frozen",
+        "pytest",
+        "-q",
+        "backend/tests/test_engine.py"
+      ],
+      "exit": 0,
+      "seconds": 0.3,
+      "log": ".loop/runs/20261110-230627-T1-engine-fb4ef3/check-0.log"
+    }
+  ],
+  "diff_truncated": true,
+  "review": {
+    "verdict": "pass",
+    "blocking": [],
+    "suggestions": [
+      "to_cents does int(d * 100) under the process-wide Decimal context. The seed amounts are well inside the default precision of 28, but a lowered context would silently drop digits. Parse the integer and the two fractional digits instead.",
+      "rules.fees is never read. The engine is fee-free, which matches this seed's \"0.00\", but any other fees value would still be valued as zero. Reject a non-zero fees field at load.",
+      "State.holdings is a plain dict inside a frozen dataclass, so a caller can edit a successful result in place. The failure path does not do this. A mapping proxy would keep that result immutable at the boundary."
+    ]
+  },
+  "finished": "2026-11-10T23:16:23+1100"
+}
