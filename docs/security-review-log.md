@@ -17,9 +17,9 @@
 | 11 | 中 | 旧审查 prompt 混入 diff，导致截断 | 审查 diff 排除 `.loop/` | `77b1ee7` |
 | 12 | 中 | 排除 `.loop/` 之后审查者看不到这些路径 | 只列出路径，省略内容 | `68ab4e8` |
 | 13 | 中 | `.loop/` 路径清单可能成为 prompt 注入渠道 | `LOOP_LAYOUT` 严格校验 gate 生成的路径；清单放进标明"不可信"的区域 | `8b3d0a1` |
-| 14 | 中 | 远端 tag 查询失败时 fail open | 改为 fail closed（T0b）：配置了 origin 却连不上时拒绝通过 | `fix/T0b-hardening` |
-| 15 | 中 | `base_sha` 在 gate 结束时才计算（TOCTOU） | gate 开始时固定 merge-base，并写入 annotated `gate/<task>` tag（T0b） | `fix/T0b-hardening` |
+| 14 | 中 | T0b 第一版把查询失败当作"离线"跳过（fail open） | main 上的版本查询失败时返回空串，被当成 tag 不一致而拒绝（结果是 fail closed，但报错信息有误导性）；T0b 第一版为了离线可用改成跳过，被本条指出；最终改为显式的 UNREACHABLE → 拒绝，并给出明确报错 | `fix/T0b-hardening`（PR 待合并） |
+| 15 | 中 | T0b 新增的 `base_sha` 在 gate 结束时才计算（TOCTOU） | 只存在于 T0b 分支（main 上没有 `base_sha`）；改为 gate 开始时固定 merge-base，并写入 annotated `gate/<task>` tag | `fix/T0b-hardening`（PR 待合并） |
 
 另外，在旧仓库中，插件对 v1 适配器的 `--force` 也提出过意见（不是本仓库的代码）。v2 的审查者只运行在 `--mode ask` 下，并拒绝 `--force/-f/--yolo`，从结构上避开了这个问题。
 
-合计：本仓库 15 条。12 条已在 main 中修复；#14、#15 在 T0b 中修复；#10 不修复（威胁模型之外，后来由 #13 部分覆盖）。
+合计：本仓库 15 条。12 条已在 main 中修复；#14、#15 针对 T0b 分支自身的代码，在 T0b 中修复（PR 待合并）；#10 不修复（威胁模型之外，后来由 #13 部分覆盖）。
