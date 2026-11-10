@@ -3,8 +3,9 @@
   "spec": {
     "loop/tests/test_gate.py": "4b3c06bc62d1e7ebe4f5ee7af39df44560b2371a330b6e930eedc2cbb0823ab2"
   },
-  "status": "spec_locked",
+  "status": "needs_review",
   "failures": [],
-  "last_run": "20261111-000310-T0b-hardening-b293d5",
-  "base": "main"
+  "last_run": "20261111-003105-T0b-hardening-530973",
+  "base": "main",
+  "base_sha": "ddae3c91222af94f1d292ea7f207db9e592e3616"
 }
