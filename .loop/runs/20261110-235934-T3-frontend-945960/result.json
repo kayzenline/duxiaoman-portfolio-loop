@@ -1,0 +1,82 @@
+{
+  "run": "20261110-235934-T3-frontend-945960",
+  "task": "T3-frontend",
+  "head": "5ceebc666fdcec9212f930d8bf656ba80058f353",
+  "started": "2026-11-10T23:59:34+1100",
+  "stage": "review_skipped",
+  "errors": [],
+  "checks": [
+    {
+      "argv": [
+        "npm",
+        "--prefix",
+        "frontend",
+        "ci"
+      ],
+      "exit": 0,
+      "seconds": 1.2,
+      "log": ".loop/runs/20261110-235934-T3-frontend-945960/check-0.log"
+    },
+    {
+      "argv": [
+        "npm",
+        "--prefix",
+        "frontend",
+        "run",
+        "build"
+      ],
+      "exit": 0,
+      "seconds": 1.9,
+      "log": ".loop/runs/20261110-235934-T3-frontend-945960/check-1.log"
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "--frozen",
+        "pytest",
+        "-q",
+        "backend/tests"
+      ],
+      "exit": 0,
+      "seconds": 1.6,
+      "log": ".loop/runs/20261110-235934-T3-frontend-945960/check-2.log"
+    },
+    {
+      "argv": [
+        "npm",
+        "--prefix",
+        "e2e",
+        "ci"
+      ],
+      "exit": 0,
+      "seconds": 0.5,
+      "log": ".loop/runs/20261110-235934-T3-frontend-945960/check-3.log"
+    },
+    {
+      "argv": [
+        "npx",
+        "--prefix",
+        "e2e",
+        "playwright",
+        "install",
+        "chromium"
+      ],
+      "exit": 0,
+      "seconds": 0.8,
+      "log": ".loop/runs/20261110-235934-T3-frontend-945960/check-4.log"
+    },
+    {
+      "argv": [
+        "npm",
+        "--prefix",
+        "e2e",
+        "test"
+      ],
+      "exit": 0,
+      "seconds": 3.9,
+      "log": ".loop/runs/20261110-235934-T3-frontend-945960/check-5.log"
+    }
+  ],
+  "finished": "2026-11-10T23:59:45+1100"
+}

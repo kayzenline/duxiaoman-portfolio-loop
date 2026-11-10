@@ -6,10 +6,10 @@
     "e2e/package.json": "d12c279893e10000fcacca79106a47d343cfd5fa79bb4f92751d3c3fd858b692",
     "e2e/package-lock.json": "aadb80df9ba576745299b3d27d288ebe03bc12dda08970d1970512b100cd13bb"
   },
-  "status": "repair",
+  "status": "needs_review",
   "failures": [
     "scope:Out of scope change: .github/workflows/ci.yml|Out of scope change: .gitignore|Out of scope change: AGENTS.md|Out of scope change: backend/tests/test_api.py|Out of scope change: backend/tests/test_engine.py|Out of scope change: backend/tests/test_restart.py|Out of scope change: loop/README.md|Out of scope change: loop/__init__.py|Out of scope change: loop/__main__.py|Out of scope change: loop/gate.py|Out of scope change: loop/reviewer.py|Out of scope change: loop/tasks.json|Out of scope change: l",
     "scope:Unexpected file under .loop/ (not gate-generated layout): .loop/runs/20261110-235913-T3-frontend-460924/"
   ],
-  "last_run": "20261110-235926-T3-frontend-bd3f56"
+  "last_run": "20261110-235934-T3-frontend-945960"
 }
