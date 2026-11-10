@@ -1,0 +1,43 @@
+{
+  "run": "20261110-233219-T0-loop-f8bdc6",
+  "task": "T0-loop",
+  "head": "9dc613d522a41cdf69860efbcd4c37c1ce329edf",
+  "started": "2026-11-10T23:32:19+1100",
+  "stage": "passed",
+  "errors": [],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "loop/tests",
+        "-t",
+        "."
+      ],
+      "exit": 0,
+      "seconds": 10.4,
+      "log": ".loop/runs/20261110-233219-T0-loop-f8bdc6/check-0.log"
+    }
+  ],
+  "diff_truncated": false,
+  "review": {
+    "verdict": "pass",
+    "blocking": [],
+    "suggestions": [
+      "loop spec always clears failures and sets status to spec_locked, even when the spec hashes are unchanged, so the three-strike counter can be reset without a test change.",
+      "write_state rewrites every task file from the snapshot loaded at start, so two overlapping gate runs clobber each other despite the per-task state files.",
+      "check_clean ignores the whole .loop/ tree, while its comment says only .loop/runs/. A check can drop .loop/state/<other-task>.json after the scope check and still pass. mark allows any added or modified path under .loop/, not only LOOP_LAYOUT.",
+      "Run checks in a clean checkout of HEAD, or re-run scope and clean after checks and limit the .loop exemption to this run's evidence directory. Gitignored files and .git/info/exclude can currently change results without failing the clean check.",
+      "stream() never parses a final NDJSON line that lacks a trailing newline, and if the process stays quiet after a result event the idle timeout discards that verdict as review_infra.",
+      "remote_tag ignores a non-zero ls-remote status and has no timeout. A missing origin tag becomes '', which check_spec treats as a mismatch, so any repo with origin cannot gate offline.",
+      "T4 allowed contains e2e/*, which overlaps T3's locked spec (e2e/flow.spec.ts and the other e2e spec files). T4's spec check does not cover those paths.",
+      "Add tests for a changed failure signature staying repair, for --skip-review never passing, and for mark rejecting a PR head that differs outside .loop/. test_uncommitted_rename_out_of_loop_dir_is_rejected also passes because the committed .loop/note.txt is already outside LOOP_LAYOUT.",
+      "check_spec still uses git diff --name-only and str.split(), so a spec path containing a space would be parsed wrong. Use -z, as changed_files already does.",
+      "Sanitize the reviewer worktree with an explicit directory walk so names like .cursor and AGENTS.md are removed even if Path.rglob('*') skips hidden entries. write_state should create the temp file with O_EXCL and refuse to follow a symlink at *.tmp."
+    ]
+  },
+  "finished": "2026-11-10T23:57:10+1100"
+}

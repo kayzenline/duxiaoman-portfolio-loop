@@ -1,0 +1,11 @@
+{
+  "spec_commit": "e7a67dc933b288c7687bae9be4ec77b53c5969ad",
+  "spec": {
+    "loop/tests/test_gate.py": "38943fd8cb3c61b7397ba5c0d37416aa52b88116564c39023e436cee1c216d29"
+  },
+  "status": "gate_passed",
+  "failures": [],
+  "last_run": "20261110-233219-T0-loop-f8bdc6",
+  "last_pass": "20261110-233219-T0-loop-f8bdc6",
+  "passed_head": "9dc613d522a41cdf69860efbcd4c37c1ce329edf"
+}

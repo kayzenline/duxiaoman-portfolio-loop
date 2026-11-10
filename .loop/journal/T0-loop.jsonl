@@ -1,0 +1,4 @@
+{"at": "2026-11-10T23:05:48+1100", "task": "T0-loop", "commit": "e7a67dc933b288c7687bae9be4ec77b53c5969ad", "event": "spec_locked", "reason": "Grok review round 1 found untested checks-stage stop rule and rename bypass; spec extended"}
+{"at": "2026-11-10T23:06:26+1100", "task": "T0-loop", "event": "gate", "stage": "scope", "status": "repair", "run": "20261110-230625-T0-loop-2631d4", "head": "a077594a32ab7f5e807d55e0c4ede3f586d1e405"}
+{"at": "2026-11-10T23:32:05+1100", "task": "T0-loop", "event": "gate", "stage": "review_infra", "status": "needs_review", "run": "20261110-230654-T0-loop-b2a309", "head": "787165d0b9c7f5060ee3667ad2fc8fa234906119"}
+{"at": "2026-11-10T23:57:10+1100", "task": "T0-loop", "event": "gate", "stage": "passed", "status": "gate_passed", "run": "20261110-233219-T0-loop-f8bdc6", "head": "9dc613d522a41cdf69860efbcd4c37c1ce329edf"}
