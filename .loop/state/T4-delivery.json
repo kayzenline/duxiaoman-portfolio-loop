@@ -1,0 +1,8 @@
+{
+  "spec_commit": "99abfe4ccc5d467b20eadfc770a92f2df2a82416",
+  "spec": {
+    "scripts/check_docs.py": "a0e926df024cd5085835220fa8c6a86a5d2dfc36c9e81cecad2fb171f8abcb61"
+  },
+  "status": "spec_locked",
+  "failures": []
+}
