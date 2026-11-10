@@ -1,0 +1,40 @@
+{
+  "adapter": [
+    "python3",
+    "loop/adapters/cursor.py",
+    "--model",
+    "grok-4.7-xhigh",
+    "--mode",
+    "agent",
+    "--allow-writes"
+  ],
+  "context": [
+    "PLAN.md",
+    "context/BRIEF.md",
+    ".agent/GITHUB-WORKFLOW.md"
+  ],
+  "timeout": 300,
+  "max_attempts": 1,
+  "tasks": [
+    {
+      "id": "source-integrity",
+      "prompt": "Implement issue #7 on the current feat/source-integrity branch. User authorizes development; Codex will do independent review and merge. Do not spawn subagents. Do not commit, push, create PR, or merge: coordinator will do those after checks. Implement loop/source_integrity.py CLI (python3 -m loop.source_integrity) that validates context/originals-manifest.json against repository files by byte size and SHA256. Accept --root and --manifest arguments for tests. Reject missing/changed files, empty or malformed manifests, duplicate paths, absolute paths, traversal and symlink escapes outside root. Exit 0 only when all entries pass, else 1 with actionable errors. Add tests/test_source_integrity.py using temporary files for good, corrupted, missing, malformed, duplicate and escape cases; never modify original sources. Add concise usage to loop/README.md. Only edit these three files. Run tests. Do not change test expectations to hide bugs. Existing workflow says no auto merge; user's new instruction authorizes Codex alone to review/merge, not you.",
+      "checks": [
+        [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-v"
+        ],
+        [
+          "python3",
+          "-m",
+          "loop.source_integrity"
+        ]
+      ]
+    }
+  ]
+}

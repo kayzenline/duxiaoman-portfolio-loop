@@ -1,0 +1,27 @@
+{
+  "id": "432cf2b71ada438b8dc601af7d398de4",
+  "task": "runner-smoke",
+  "attempt": 1,
+  "adapter": [
+    "python3",
+    "-c",
+    "import sys; print('Mock received context:', len(sys.stdin.read()))"
+  ],
+  "started": 1794267046.02866,
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "exit": 0
+    }
+  ],
+  "agent_exit": 0,
+  "finished": 1794267046.790627
+}

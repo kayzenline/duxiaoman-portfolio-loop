@@ -20,16 +20,28 @@ start() {
   for _ in $(seq 1 100); do curl -fs "http://127.0.0.1:$PORT/api/health" >/dev/null && return 0; sleep 0.1; done
   cat "$WORK/server.log"; echo "server did not start"; exit 1
 }
-j() { python3 -c "import json,sys; d=json.load(sys.stdin); print(eval(sys.argv[1], {}, {'d': d}))" "$1"; }
+# get <dotted.path>: read a field from JSON on stdin without eval (list indexes are numbers).
+get() { python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+for k in sys.argv[1].split("."):
+    d = d[int(k)] if isinstance(d, list) else d[k]
+print(json.dumps(d, ensure_ascii=False) if isinstance(d, (list, dict)) else d)' "$1"; }
 
 echo "[2/5] start + AC-01"
 start
-[ "$(curl -fs "http://127.0.0.1:$PORT/api/portfolio" | j "d['valuation']['total']")" = "100000.00" ]
+P=$(curl -fs "http://127.0.0.1:$PORT/api/portfolio")
+[ "$(echo "$P" | get valuation.total)" = "100000.00" ]
+[ "$(echo "$P" | get valuation.cash)" = "20000.00" ]
+[ "$(echo "$P" | get valuation.positions.0.weight)" = "40.00" ]          # A01
+[ "$(echo "$P" | get valuation.industries.0.industry)" = "科技" ]
+[ "$(echo "$P" | get valuation.industries.0.weight)" = "60.00" ]
+[ "$(echo "$P" | python3 -c 'import json,sys; print(",".join(a["target"] for a in json.load(sys.stdin)["valuation"]["alerts"]))')" = "A01,科技" ]
 curl -fs "http://127.0.0.1:$PORT/" | grep -q '<div id="root">'   # built UI served by the backend
 
 echo "[3/5] save AC-03 scenario"
 ID=$(curl -fs -X POST -H 'content-type: application/json' "http://127.0.0.1:$PORT/api/scenarios" \
-  -d '{"name":"AC-03","ops":[{"side":"sell","symbol":"A01","quantity":100},{"side":"buy","symbol":"A02","quantity":100}]}' | j "d['id']")
+  -d '{"name":"AC-03","ops":[{"side":"sell","symbol":"A01","quantity":100},{"side":"buy","symbol":"A02","quantity":100}]}' | get id)
 BEFORE=$(curl -fs "http://127.0.0.1:$PORT/api/scenarios/$ID")
 
 echo "[4/5] restart server"
@@ -39,6 +51,10 @@ start
 echo "[5/5] reopen + isolation"
 AFTER=$(curl -fs "http://127.0.0.1:$PORT/api/scenarios/$ID")
 [ "$BEFORE" = "$AFTER" ]
-[ "$(echo "$AFTER" | j "d['simulated']['cash']")" = "25000.00" ]
-[ "$(curl -fs "http://127.0.0.1:$PORT/api/portfolio" | j "[p['quantity'] for p in d['valuation']['positions'][:2]] + [d['valuation']['cash']]")" = "[400, 400, '20000.00']" ]
+[ "$(echo "$AFTER" | get simulated.cash)" = "25000.00" ]
+[ "$(echo "$AFTER" | get simulated.positions.1.quantity)" = "500" ]
+P=$(curl -fs "http://127.0.0.1:$PORT/api/portfolio")
+[ "$(echo "$P" | get valuation.cash)" = "20000.00" ]
+[ "$(echo "$P" | get valuation.positions.0.quantity)" = "400" ]
+[ "$(echo "$P" | get valuation.positions.1.quantity)" = "400" ]
 echo "CLEAN INSTALL CHECK PASSED ($(uv run --frozen python --version), node $(node --version))"
