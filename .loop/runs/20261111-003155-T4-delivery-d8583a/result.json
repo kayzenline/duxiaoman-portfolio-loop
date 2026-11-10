@@ -1,0 +1,42 @@
+{
+  "run": "20261111-003155-T4-delivery-d8583a",
+  "task": "T4-delivery",
+  "head": "00a380eda940417d251c6596b79f9a595dba7d68",
+  "started": "2026-11-11T00:31:56+1100",
+  "stage": "passed",
+  "errors": [],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "scripts/check_docs.py"
+      ],
+      "exit": 0,
+      "seconds": 0.1,
+      "log": ".loop/runs/20261111-003155-T4-delivery-d8583a/check-0.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/clean_install_check.sh"
+      ],
+      "exit": 0,
+      "seconds": 5.2,
+      "log": ".loop/runs/20261111-003155-T4-delivery-d8583a/check-1.log"
+    }
+  ],
+  "diff_truncated": false,
+  "review": {
+    "verdict": "pass",
+    "blocking": [],
+    "suggestions": [
+      "DESIGN.md §7 says T0 round 1 adopted 5 of 6 suggestions and rejected only locking the check commands into the spec. The review's first suggestion is still open: loop/gate.py:105 clears failures on every spec relock, including an identical hash, and the round-4 pass review lists it again. Four suggestions were fully adopted; the clean-check item was only half done.",
+      "The statistics table folds T0's scope failure and timeout into 轮次, then lists T3 as 2. T3 also had scope failures 20261110-235913-T3-frontend-460924, 20261110-235926-T3-frontend-bd3f56, and 20261110-230628-T3-frontend-779bb4, plus review_skipped run 20261110-235934-T3-frontend-945960.",
+      "scripts/clean_install_check.sh treats AC-01 as total == 100000.00 only. Cash, the two alerts, and weights are unchecked there, while DESIGN and VERIFY describe that script as rechecking AC-01. The j helper also evals its format string.",
+      "DESIGN §3 says every displayed number is a backend string. quantity and held_count are JSON numbers, and the overview card renders alerts.length.",
+      "A raw JSON body {\"quantity\": 1.0} becomes Python int 1 in json.loads, so the HTTP layer accepts it. The engine test rejects a real float 1.0, and the UI sends the text 1.0 through as a string, which the backend rejects. VERIFY's AC-04 aside reads as if 1.0 were an HTTP case; api-ac04.txt and test_api.py do not include it.",
+      "The \"14 security-plugin comments, 12 fixed\" count and the other-repo v1 loop story have no artifact in this repo. loop/README.md does match the single-trusted-operator threat model."
+    ]
+  },
+  "finished": "2026-11-11T00:49:03+1100"
+}
