@@ -1,0 +1,2 @@
+{"at": "2026-11-10T23:06:08+1100", "task": "T1-engine", "commit": "6264060811f289c3d2412fd75e34198f0a8c3231", "event": "spec_locked", "reason": "initial spec"}
+{"at": "2026-11-10T23:16:23+1100", "task": "T1-engine", "event": "gate", "stage": "passed", "status": "gate_passed", "run": "20261110-230627-T1-engine-fb4ef3", "head": "91e477bcb2985cce33bbc244c66e9551253aa7c7"}
