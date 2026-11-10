@@ -1,0 +1,41 @@
+{
+  "run": "20261111-010541-T4-delivery-faa64f",
+  "task": "T4-delivery",
+  "head": "fe7b8e397d121386c8a90474600dd6cf17eecc05",
+  "started": "2026-11-11T01:05:41+1100",
+  "stage": "passed",
+  "errors": [],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "scripts/check_docs.py"
+      ],
+      "exit": 0,
+      "seconds": 0.1,
+      "log": ".loop/runs/20261111-010541-T4-delivery-faa64f/check-0.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/clean_install_check.sh"
+      ],
+      "exit": 0,
+      "seconds": 5.1,
+      "log": ".loop/runs/20261111-010541-T4-delivery-faa64f/check-1.log"
+    }
+  ],
+  "diff_truncated": false,
+  "review": {
+    "verdict": "pass",
+    "blocking": [],
+    "suggestions": [
+      "Regenerate docs/verify/clean-install.txt from the current script. It ends at \"CLEAN INSTALL CHECK PASSED\", while scripts/clean_install_check.sh and .loop/runs/20261111-010532-T4-delivery-43b9c5/check-1.log print \"CLEAN INSTALL CHECK PASSED (Python 3.12.9, node v22.22.0)\". VERIFY.md calls that file the raw output.",
+      "Add run 20261111-005224-T4-delivery-ea6321 to the VERIFY.md gate table. DESIGN.md §7 already labels it as the mechanical-only pass between d8583a and 7fe998.",
+      "In scripts/clean_install_check.sh, assert positions.0.symbol is A01 and positions.1.symbol is A02 next to the quantity and weight checks so the HTTP proof does not depend on list order.",
+      "DESIGN.md runs well past the brief's suggested 2–4 pages because the collaboration log is detailed. If page count is scored strictly, move the run table and v1 postmortem into docs/ and keep a shorter summary in DESIGN.md.",
+      "README's uv 0.12.23 and npm 10.9.4 do not appear in the captured install log. Python 3.12.9 and Node v22.22.0 do. Record uv and npm versions in that artifact on the next run."
+    ]
+  },
+  "finished": "2026-11-11T01:19:00+1100"
+}
