@@ -72,7 +72,7 @@ def git(root, *args):
 def changed_files(root, base):
     # --no-renames: a rename shows as delete + add, so the source path cannot hide. -z: exact names.
     committed = [f for f in git(root, 'diff', '--name-only', '--no-renames', '-z', f'{base}...HEAD').split('\0') if f]
-    entries = git(root, 'status', '--porcelain', '--no-renames', '-z').split('\0')
+    entries = git(root, 'status', '--porcelain', '--no-renames', '--untracked-files=all', '-z').split('\0')
     dirty = [e[3:] for e in entries if e]
     return sorted(set(committed + dirty))
 
@@ -102,7 +102,10 @@ def lock_spec(root, task_id, reason):
     head = git(root, 'rev-parse', 'HEAD').strip()
     hashes = {p: sha(root / p) for p in t['spec']}
     entry = state['tasks'].setdefault(task_id, {})
-    entry.update(spec_commit=head, spec=hashes, status='spec_locked', failures=[])
+    unchanged = entry.get('spec') == hashes
+    entry.update(spec_commit=head, spec=hashes)
+    if not unchanged:  # only a real spec change resets the three-strike counter
+        entry.update(status='spec_locked', failures=[])
     write_state(root, state)
     journal(root, {'at': time.strftime('%FT%T%z'), 'task': task_id, 'commit': head,
                    'event': 'spec_relocked' if relock else 'spec_locked', 'reason': reason})
@@ -110,12 +113,17 @@ def lock_spec(root, task_id, reason):
 
 
 def remote_tag(root, tag):
-    """Commit the tag points to on origin; None if there is no origin (e.g. tests)."""
+    """Commit the tag points to on origin; None if there is no origin or it is unreachable (offline)."""
     if subprocess.run(['git', 'remote', 'get-url', 'origin'], cwd=root, capture_output=True).returncode:
         return None
-    out = subprocess.run(['git', 'ls-remote', 'origin', f'refs/tags/{tag}^{{}}', f'refs/tags/{tag}'],
-                         cwd=root, capture_output=True, text=True).stdout.split('\n')
-    refs = dict(reversed(line.split('\t')) for line in out if '\t' in line)
+    try:
+        res = subprocess.run(['git', 'ls-remote', 'origin', f'refs/tags/{tag}^{{}}', f'refs/tags/{tag}'],
+                             cwd=root, capture_output=True, text=True, timeout=20)
+    except subprocess.TimeoutExpired:
+        return None
+    if res.returncode:
+        return None
+    refs = dict(reversed(line.split('\t')) for line in res.stdout.split('\n') if '\t' in line)
     return refs.get(f'refs/tags/{tag}^{{}}') or refs.get(f'refs/tags/{tag}') or ''
 
 
@@ -128,7 +136,7 @@ def check_spec(root, task):
     remote = remote_tag(root, tag)
     if remote is not None and remote != git(root, 'rev-parse', f'{tag}^{{commit}}').strip():
         return [f'Local {tag} differs from origin; spec lock was moved without being pushed']
-    changed = git(root, 'diff', '--name-only', tag, '--', *task['spec']).split()
+    changed = [f for f in git(root, 'diff', '--name-only', '-z', tag, '--', *task['spec']).split('\0') if f]
     return [f'Acceptance test changed since lock ({tag}): {f}' for f in changed]
 
 
@@ -145,9 +153,9 @@ def check_scope(root, task, base):
 
 
 def check_clean(root):
-    """A pass must describe a commit, so uncommitted work (outside .loop/runs/) is rejected.
+    """A pass must describe a commit, so uncommitted work outside .loop/ (gate-written) is rejected.
     --no-renames -z: a rename appears as delete + add, so both paths are checked exactly."""
-    entries = [e[3:] for e in git(root, 'status', '--porcelain', '--no-renames', '-z').split('\0') if e]
+    entries = [e[3:] for e in git(root, 'status', '--porcelain', '--no-renames', '--untracked-files=all', '-z').split('\0') if e]
     return [f'Uncommitted change, commit before gating: {f}' for f in entries if not f.startswith('.loop/')]
 
 
@@ -294,6 +302,7 @@ def gate(root, task_id, base='main', skip_review=False):
         same = len(fails) >= MAX_SAME_FAILURE and len(set(fails[-MAX_SAME_FAILURE:])) == 1
         entry['status'] = 'blocked' if same else 'repair'
     entry['last_run'] = run_id
+    entry['base'] = base
     write_state(root, state)
     journal(root, {'at': record['finished'], 'task': task_id, 'event': 'gate',
                    'stage': record['stage'], 'status': entry['status'], 'run': run_id, 'head': record['head']})

@@ -48,13 +48,18 @@ def main(argv=None):
         e = state['tasks'].setdefault(a.task, {})
         if e.get('status') not in ('gate_passed', 'pr_open'):
             sys.exit('Refusing: task has not passed the gate')
-        pr = json.loads(subprocess.run(['gh', 'pr', 'view', a.pr, '--json', 'headRefOid,state,url'],
+        pr = json.loads(subprocess.run(['gh', 'pr', 'view', a.pr, '--json', 'headRefOid,baseRefName,state,url'],
                                        check=True, capture_output=True, text=True, cwd=root).stdout)
         tag = subprocess.run(['git', 'rev-parse', '--verify', '-q', f'gate/{a.task}^{{commit}}'],
                              cwd=root, capture_output=True, text=True).stdout.strip()
         if not tag or tag != e.get('passed_head'):
             sys.exit(f'Refusing: gate/{a.task} tag missing or disagrees with state; re-run the gate')
         passed = tag
+        base = e.get('base', 'main')
+        merged_base = base != 'main' and subprocess.run(
+            ['git', 'merge-base', '--is-ancestor', base, 'main'], cwd=root, capture_output=True).returncode == 0
+        if pr['baseRefName'] != base and not (pr['baseRefName'] == 'main' and merged_base):
+            sys.exit(f"Refusing: PR base {pr['baseRefName']} != gate base {base} (and {base} is not merged into main)")
         if pr['headRefOid'] != passed:
             # Allowed: commits after the pass that only add gate evidence under .loop/.
             extra = subprocess.run(['git', 'diff', '--name-status', '--no-renames', '-z',
@@ -62,7 +67,7 @@ def main(argv=None):
             parts = [x for x in extra.stdout.split('\0') if x]
             changes = list(zip(parts[0::2], parts[1::2]))  # (status, path); deletions included
             files = [f'{st} {path}' for st, path in changes]
-            if extra.returncode or not all(path.startswith('.loop/') and st in ('A', 'M') for st, path in changes):
+            if extra.returncode or not all(g.LOOP_LAYOUT.match(path) and st in ('A', 'M') for st, path in changes):
                 sys.exit(f"Refusing: PR head {pr['headRefOid'][:8]} differs from gate-passed head "
                          f"{str(passed)[:8]} beyond .loop/ evidence: {files[:5]}")
         if a.status == 'merged' and pr['state'] != 'MERGED':
