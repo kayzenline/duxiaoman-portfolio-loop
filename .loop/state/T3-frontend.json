@@ -1,11 +1,12 @@
 {
-  "spec_commit": "8c1d63b54281a8b3ade892f99b313622e2ea6147",
+  "spec_commit": "f5ba935270149fc641e9e381d3aefd05e7444b28",
   "spec": {
-    "e2e/flow.spec.ts": "35afffe06d344f444f0cade91c6389382b599ba76f225081b1ca0be93a5c2387"
+    "e2e/flow.spec.ts": "35afffe06d344f444f0cade91c6389382b599ba76f225081b1ca0be93a5c2387",
+    "e2e/playwright.config.ts": "f4569c8820cb8db748a8baae775e5c878081c1558be9a1b41a900ee136541c98",
+    "e2e/package.json": "d12c279893e10000fcacca79106a47d343cfd5fa79bb4f92751d3c3fd858b692",
+    "e2e/package-lock.json": "aadb80df9ba576745299b3d27d288ebe03bc12dda08970d1970512b100cd13bb"
   },
-  "status": "repair",
-  "failures": [
-    "scope:Out of scope change: e2e/.gitignore|Out of scope change: e2e/package-lock.json|Out of scope change: e2e/package.json|Out of scope change: e2e/playwright.config.ts"
-  ],
+  "status": "spec_locked",
+  "failures": [],
   "last_run": "20261110-230628-T3-frontend-779bb4"
 }

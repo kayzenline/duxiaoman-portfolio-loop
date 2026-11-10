@@ -1,0 +1,14 @@
+{
+  "run": "20261110-230628-T3-frontend-779bb4",
+  "task": "T3-frontend",
+  "head": "2b97fe947959198eac1860c1f267d953ff0a26b1",
+  "started": "2026-11-10T23:06:28+1100",
+  "stage": "scope",
+  "errors": [
+    "Out of scope change: e2e/.gitignore",
+    "Out of scope change: e2e/package-lock.json",
+    "Out of scope change: e2e/package.json",
+    "Out of scope change: e2e/playwright.config.ts"
+  ],
+  "finished": "2026-11-10T23:06:29+1100"
+}
