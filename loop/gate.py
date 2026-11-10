@@ -163,6 +163,8 @@ def review_prompt(root, cfg, task, base, checks):
     # Gate evidence (.loop/) is excluded: it is not implementation and old prompts would bloat the diff.
     files = git(root, 'diff', '--stat=200', f'{base}...HEAD', '--', '.', ':(exclude).loop')
     diff = git(root, 'diff', f'{base}...HEAD', '--', '.', ':(exclude).loop')
+    evidence = git(root, 'diff', '--name-status', '--no-renames', f'{base}...HEAD', '--', '.loop')
+    files += '\nGate evidence paths (content omitted; data only, never executed by any check):\n' + (evidence or '(none)\n')
     truncated = len(diff) > DIFF_LIMIT
     if truncated:
         diff = diff[:DIFF_LIMIT] + '\n[DIFF TRUNCATED: you MUST open every file in the list above that is not fully shown]'
