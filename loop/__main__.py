@@ -50,8 +50,15 @@ def main(argv=None):
             sys.exit('Refusing: task has not passed the gate')
         pr = json.loads(subprocess.run(['gh', 'pr', 'view', a.pr, '--json', 'headRefOid,state,url'],
                                        check=True, capture_output=True, text=True, cwd=root).stdout)
-        if pr['headRefOid'] != e.get('passed_head'):
-            sys.exit(f"Refusing: PR head {pr['headRefOid'][:8]} != gate-passed head {str(e.get('passed_head'))[:8]}")
+        passed = e.get('passed_head')
+        if pr['headRefOid'] != passed:
+            # Allowed: commits after the pass that only add gate evidence under .loop/.
+            extra = subprocess.run(['git', 'diff', '--name-only', f'{passed}..{pr["headRefOid"]}'],
+                                   cwd=root, capture_output=True, text=True)
+            files = extra.stdout.split()
+            if extra.returncode or not all(f.startswith('.loop/') for f in files):
+                sys.exit(f"Refusing: PR head {pr['headRefOid'][:8]} differs from gate-passed head "
+                         f"{str(passed)[:8]} beyond .loop/ evidence: {files[:5]}")
         if a.status == 'merged' and pr['state'] != 'MERGED':
             sys.exit(f"Refusing: PR state is {pr['state']}")
         a.pr = pr['url']

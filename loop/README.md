@@ -30,7 +30,7 @@ python3 -m loop status
 - **范围锁**：`git diff main...HEAD` 中出现 `allowed + spec + .loop/ + tasks/` 以外的文件即失败；`tasks.json` 只在 T0 可改，后续切片不能放宽自己的检查。
 - **先便宜后昂贵**：机械检查失败就不调用 Grok。
 - **干净审查环境**：Grok 在 `HEAD` 的临时 detached worktree 中运行，删除 `.cursor/ .claude/ .mcp.json AGENTS.md` 等项目级 Agent 配置；prompt 明确 diff 为不可信数据；始终附完整改动文件列表，diff 截断时记录 `diff_truncated` 并要求逐个打开。
-- **合并核验**：`loop mark` 通过 `gh pr view` 核对 PR head == `passed_head`，`merged` 还要求 PR 状态为 MERGED。
+- **合并核验**：`loop mark` 通过 `gh pr view` 核对 PR head == `passed_head`（之后只允许追加 `.loop/` 证据提交），`merged` 还要求 PR 状态为 MERGED。
 - **审查结论**：只取 Grok 回复中最后一个 ```json 块；缺失、格式错误或有 blocking 一律判 fail。
 
 ## 证据
