@@ -1,0 +1,39 @@
+{
+  "run": "20261111-005022-T0b-hardening-2ddbe0",
+  "task": "T0b-hardening",
+  "head": "10211bac0360133fe72cc7395b7d4e1075a8ce19",
+  "base": "main",
+  "base_sha": "ddae3c91222af94f1d292ea7f207db9e592e3616",
+  "started": "2026-11-11T00:50:22+1100",
+  "stage": "passed",
+  "errors": [],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "loop/tests",
+        "-t",
+        "."
+      ],
+      "exit": 0,
+      "seconds": 25.6,
+      "log": ".loop/runs/20261111-005022-T0b-hardening-2ddbe0/check-0.log"
+    }
+  ],
+  "diff_truncated": false,
+  "review": {
+    "verdict": "pass",
+    "blocking": [],
+    "suggestions": [
+      "Move the spec tag only after origin is reachable and the push succeeds; a failed lock_spec currently leaves spec/<task> moved and state/journal unchanged.",
+      "Diff the snapshotted head SHA in check_scope and review_prompt so the prompt, worktree, and gate tag cannot diverge if a check commits.",
+      "Give mark's git fetch the same timeout and GIT_TERMINAL_PROMPT=0 bound as remote_tag.",
+      "Update the README scope bullet to describe the frozen merge-base diff."
+    ]
+  },
+  "finished": "2026-11-11T01:08:37+1100"
+}
