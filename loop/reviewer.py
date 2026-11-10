@@ -26,6 +26,9 @@ def build_argv(cfg, workspace):
         raise ReviewError('Reviewer must stay read-only; remove --force/--yolo')
     if '--mode' not in argv:
         argv += ['--mode', 'ask']
+    modes = [argv[i + 1] for i, a in enumerate(argv[:-1]) if a == '--mode']
+    if modes != ['ask'] or any(a.startswith('--mode=') for a in argv):
+        raise ReviewError('Reviewer must run with exactly one `--mode ask`')
     return argv
 
 
@@ -90,6 +93,8 @@ def parse_verdict(text):
         return {'verdict': 'fail', 'blocking': [{'issue': 'Reviewer verdict block missing or invalid'}]}
     if v.get('verdict') not in ('pass', 'fail') or not isinstance(v.get('blocking', []), list):
         return {'verdict': 'fail', 'blocking': [{'issue': f'Unrecognised verdict: {v!r}'}]}
+    if not all(isinstance(b, dict) for b in v.get('blocking', [])):
+        return {'verdict': 'fail', 'blocking': [{'issue': 'Malformed blocking entries in verdict'}], 'suggestions': []}
     v.setdefault('blocking', [])
     v.setdefault('suggestions', [])
     if v['blocking']:

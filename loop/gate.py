@@ -135,10 +135,10 @@ def check_scope(root, task, base):
 
 
 def check_clean(root):
-    """A pass must describe a commit, so uncommitted work (outside .loop/) is rejected."""
-    dirty = [line[3:] for line in git(root, 'status', '--porcelain').splitlines()
-             if not line[3:].startswith('.loop/')]
-    return [f'Uncommitted change, commit before gating: {f}' for f in dirty]
+    """A pass must describe a commit, so uncommitted work (outside .loop/runs/) is rejected.
+    --no-renames -z: a rename appears as delete + add, so both paths are checked exactly."""
+    entries = [e[3:] for e in git(root, 'status', '--porcelain', '--no-renames', '-z').split('\0') if e]
+    return [f'Uncommitted change, commit before gating: {f}' for f in entries if not f.startswith('.loop/')]
 
 
 def run_checks(root, task, evidence):
@@ -235,8 +235,13 @@ def gate(root, task_id, base='main', skip_review=False):
     else:
         record['checks'] = run_checks(root, task, evidence)
         failed = [c for c in record['checks'] if c['exit'] != 0]
-        if failed:
-            record.update(stage='checks', errors=[f"{failed[0]['argv']} exited {failed[0]['exit']}; see {failed[0]['log']}"])
+        dirtied = check_clean(root)
+        if dirtied and not failed:
+            record.update(stage='clean', errors=['Checks modified the tree: ' + '; '.join(dirtied)])
+        elif failed:
+            # Stable text (no per-run log path) so the same failing check repeats the same signature.
+            record.update(stage='checks', errors=[f"{failed[0]['argv']} exited {failed[0]['exit']}"],
+                          failed_log=failed[0]['log'])
         elif skip_review:
             record.update(stage='review_skipped')
         else:

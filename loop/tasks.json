@@ -42,7 +42,7 @@
     },
     {
       "id": "T1-engine",
-      "goal": "Pure domain engine (FR-01/02/03 calculation core): load seed snapshot, valuation in integer cents, concentration alerts with strict > thresholds using unrounded exact comparison, sequential buy/sell replay from the original portfolio with validation (known symbol, positive JSON integer quantity, non-negative cash, no oversell) where a failing op reports its index and leaves the last valid result unchanged, comparison of original vs simulated. Covers AC-01..AC-04 at the engine level.",
+      "goal": "Pure domain engine (FR-01/02/03 calculation core): load seed snapshot, valuation in integer cents (cash counts in the total-assets denominator but belongs to no industry), concentration alerts with strict > thresholds using unrounded exact comparison, sequential buy/sell replay from the original portfolio with validation (known symbol, positive JSON integer quantity, non-negative cash, no oversell) where a failing op reports its index and leaves the last valid result unchanged, comparison of original vs simulated. Covers AC-01..AC-04 at the engine level.",
       "allowed": [
         "backend/portfolio/*",
         "pyproject.toml",
