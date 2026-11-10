@@ -3,9 +3,9 @@
   "spec": {
     "scripts/check_docs.py": "a0e926df024cd5085835220fa8c6a86a5d2dfc36c9e81cecad2fb171f8abcb61"
   },
-  "status": "gate_passed",
+  "status": "needs_review",
   "failures": [],
-  "last_run": "20261111-010541-T4-delivery-faa64f",
+  "last_run": "20261111-011953-T4-delivery-1be7d1",
   "last_pass": "20261111-010541-T4-delivery-faa64f",
   "passed_head": "fe7b8e397d121386c8a90474600dd6cf17eecc05"
 }
