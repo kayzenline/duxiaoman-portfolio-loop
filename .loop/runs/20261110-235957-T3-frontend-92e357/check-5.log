@@ -1,0 +1,16 @@
+
+> test
+> playwright test
+
+[2m[WebServer] [22mINFO:     Started server process [67533]
+[2m[WebServer] [22mINFO:     Waiting for application startup.
+[2m[WebServer] [22mINFO:     Application startup complete.
+[2m[WebServer] [22mINFO:     Uvicorn running on http://127.0.0.1:8765 (Press CTRL+C to quit)
+
+Running 3 tests using 1 worker
+
+  ✓  1 flow.spec.ts:17:5 › AC-01 overview shows totals, distribution, snapshot time and exactly two alerts (366ms)
+  ✓  2 flow.spec.ts:35:5 › AC-02/03 sequential ops update the comparison; AC-04 errors keep the valid result (1.1s)
+  ✓  3 flow.spec.ts:60:5 › AC-05 save, refresh and reopen give the same result; original untouched (730ms)
+
+  3 passed (3.1s)
