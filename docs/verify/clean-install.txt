@@ -3,4 +3,4 @@
 [3/5] save AC-03 scenario
 [4/5] restart server
 [5/5] reopen + isolation
-CLEAN INSTALL CHECK PASSED (Python 3.12.9, node v22.22.0)
+CLEAN INSTALL CHECK PASSED (Python 3.12.9, uv 0.12.23, node v22.22.0, npm 10.9.4)

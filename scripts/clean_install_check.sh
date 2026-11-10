@@ -33,7 +33,8 @@ start
 P=$(curl -fs "http://127.0.0.1:$PORT/api/portfolio")
 [ "$(echo "$P" | get valuation.total)" = "100000.00" ]
 [ "$(echo "$P" | get valuation.cash)" = "20000.00" ]
-[ "$(echo "$P" | get valuation.positions.0.weight)" = "40.00" ]          # A01
+[ "$(echo "$P" | get valuation.positions.0.symbol)" = "A01" ]
+[ "$(echo "$P" | get valuation.positions.0.weight)" = "40.00" ]
 [ "$(echo "$P" | get valuation.industries.0.industry)" = "科技" ]
 [ "$(echo "$P" | get valuation.industries.0.weight)" = "60.00" ]
 [ "$(echo "$P" | python3 -c 'import json,sys; print(",".join(a["target"] for a in json.load(sys.stdin)["valuation"]["alerts"]))')" = "A01,科技" ]
@@ -52,9 +53,10 @@ echo "[5/5] reopen + isolation"
 AFTER=$(curl -fs "http://127.0.0.1:$PORT/api/scenarios/$ID")
 [ "$BEFORE" = "$AFTER" ]
 [ "$(echo "$AFTER" | get simulated.cash)" = "25000.00" ]
+[ "$(echo "$AFTER" | get simulated.positions.1.symbol)" = "A02" ]
 [ "$(echo "$AFTER" | get simulated.positions.1.quantity)" = "500" ]
 P=$(curl -fs "http://127.0.0.1:$PORT/api/portfolio")
 [ "$(echo "$P" | get valuation.cash)" = "20000.00" ]
 [ "$(echo "$P" | get valuation.positions.0.quantity)" = "400" ]
 [ "$(echo "$P" | get valuation.positions.1.quantity)" = "400" ]
-echo "CLEAN INSTALL CHECK PASSED ($(uv run --frozen python --version), node $(node --version))"
+echo "CLEAN INSTALL CHECK PASSED ($(uv run --frozen python --version), $(uv --version | cut -d' ' -f1-2), node $(node --version), npm $(npm --version))"

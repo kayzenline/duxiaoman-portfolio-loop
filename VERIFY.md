@@ -38,7 +38,7 @@
 
 ## 开发过程中的门禁证据（摘要）
 
-每个切片合并前都经过 `loop gate`：spec 锁 → 范围 → 工作区干净 → 检查命令 → Grok 只读审查。完整记录见 DESIGN.md §7。
+每个切片合并前都经过 `loop gate`：spec 锁 → 范围 → 工作区干净 → 检查命令 → Grok 只读审查。完整记录见 [docs/ai-collaboration.md](docs/ai-collaboration.md)。
 
 | 运行 | 切片 | 结果 |
 | --- | --- | --- |
@@ -48,6 +48,7 @@
 | `.loop/runs/20261110-230628-T2-api-34235b` | T2 | 通过 |
 | `.loop/runs/20261111-001322-T3-frontend-92ef26` | T3 | 通过（第 2 轮） |
 | `.loop/runs/20261111-003155-T4-delivery-d8583a` | T4 | 通过；之后据建议修改文档 |
+| `.loop/runs/20261111-005224-T4-delivery-ea6321` | T4 | 仅机械检查（修订后的文档） |
 | `.loop/runs/20261111-005233-T4-delivery-7fe998` | T4 | 通过（修订后的文档）；之后又据 4 条准确性建议修改，最终一轮见 PR 描述 |
 
 ## 未验证 / 局限
