@@ -6,3 +6,4 @@
 {"at": "2026-11-11T01:05:39+1100", "task": "T4-delivery", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-010532-T4-delivery-43b9c5", "head": "303970bc1774e68dac18da4b453bf00cd49f9102"}
 {"at": "2026-11-11T01:19:00+1100", "task": "T4-delivery", "event": "gate", "stage": "passed", "status": "gate_passed", "run": "20261111-010541-T4-delivery-faa64f", "head": "fe7b8e397d121386c8a90474600dd6cf17eecc05"}
 {"at": "2026-11-11T01:20:00+1100", "task": "T4-delivery", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-011953-T4-delivery-1be7d1", "head": "a78c65394826119d8f7176ba67b263c209855c57"}
+{"at": "2026-11-11T01:27:49+1100", "task": "T4-delivery", "event": "gate", "stage": "review", "status": "repair", "run": "20261111-012002-T4-delivery-0162c4", "head": "15dbafa4d8bf9d7a7067149b37c23d4d61d70d85"}
