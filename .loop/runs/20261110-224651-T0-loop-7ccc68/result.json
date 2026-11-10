@@ -1,0 +1,58 @@
+{
+  "run": "20261110-224651-T0-loop-7ccc68",
+  "task": "T0-loop",
+  "head": "8def92300bd938768b94147e8b70e28351d642f9",
+  "started": "2026-11-10T22:46:51+1100",
+  "stage": "review",
+  "errors": [
+    "loop/gate.py:175 Check-failure text includes the unique run log path, so the signature at line 198 changes every attempt and the same failing check stays repair forever. The locked test only repeats a stable reviewer finding, so it never proves the checks-stage stop rule.",
+    "loop/__main__.py:48 mark pr_open has no gate check, and mark merged treats pr_open as sufficient without comparing HEAD to passed_head, so a merge can be recorded for a task that never passed the gate or for a later commit.",
+    "loop/gate.py:99 The .loop/ exemption matches the raw porcelain line. A rename is recorded as 'R  .loop/<old> -> <new>', so a rename onto an allowed path skips the clean check; scope keeps only the destination, tests run on the dirty tree, and passed_head remains HEAD."
+  ],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "loop/tests",
+        "-t",
+        "."
+      ],
+      "exit": 0,
+      "seconds": 7.3,
+      "log": ".loop/runs/20261110-224651-T0-loop-7ccc68/check-0.log"
+    }
+  ],
+  "review": {
+    "verdict": "fail",
+    "blocking": [
+      {
+        "file": "loop/gate.py",
+        "line": 175,
+        "issue": "Check-failure text includes the unique run log path, so the signature at line 198 changes every attempt and the same failing check stays repair forever. The locked test only repeats a stable reviewer finding, so it never proves the checks-stage stop rule."
+      },
+      {
+        "file": "loop/__main__.py",
+        "line": 48,
+        "issue": "mark pr_open has no gate check, and mark merged treats pr_open as sufficient without comparing HEAD to passed_head, so a merge can be recorded for a task that never passed the gate or for a later commit."
+      },
+      {
+        "file": "loop/gate.py",
+        "line": 99,
+        "issue": "The .loop/ exemption matches the raw porcelain line. A rename is recorded as 'R  .loop/<old> -> <new>', so a rename onto an allowed path skips the clean check; scope keeps only the destination, tests run on the dirty tree, and passed_head remains HEAD."
+      }
+    ],
+    "suggestions": [
+      "Do not clear failures or keep a stale passed_head when loop spec rewrites an identical hash.",
+      "Treat non-dict blocking entries as a malformed verdict so gate() records fail instead of raising AttributeError before writing state.",
+      "Parse git diff -z and status -z, and apply the .loop exemption to every path in a rename, not to the raw line or to whitespace-split tokens.",
+      "Re-run the clean check after run_checks, and include the check commands in the spec lock.",
+      "Reject reviewer --mode unless the value is ask, even when --mode is already in argv.",
+      "Write into the T1 goal that cash is in the weight denominator and in no industry, as in rules.cash_in_denominator."
+    ]
+  },
+  "finished": "2026-11-10T23:04:15+1100"
+}
