@@ -41,6 +41,30 @@
       ]
     },
     {
+      "id": "T0b-hardening",
+      "goal": "Loop follow-up: adopt Grok round-4 suggestions and the peer-session merge-order finding — untracked-files=all, mark verifies PR baseRefName against gate base and LOOP_LAYOUT for evidence commits, relock with unchanged hashes keeps failures, stream parses a trailing line and never idles out after a result, remote spec-tag lookup that FAILS CLOSED when origin is configured but unreachable (decision after security review: a Grok review needs network anyway, so offline gating has no value; bounded by timeout and GIT_TERMINAL_PROMPT=0), reviewed merge-base fixed at gate start and stored on an annotated gate/<task> tag, -z in check_spec, T4 no longer overlaps T3 spec.",
+      "allowed": [
+        "loop/*",
+        "AGENTS.md",
+        ".gitignore"
+      ],
+      "spec": [
+        "loop/tests/test_gate.py"
+      ],
+      "checks": [
+        [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "loop/tests",
+          "-t",
+          "."
+        ]
+      ]
+    },
+    {
       "id": "T1-engine",
       "goal": "Pure domain engine (FR-01/02/03 calculation core): load seed snapshot, valuation in integer cents (cash counts in the total-assets denominator but belongs to no industry), concentration alerts with strict > thresholds using unrounded exact comparison, sequential buy/sell replay from the original portfolio with validation (known symbol, positive JSON integer quantity, non-negative cash, no oversell) where a failing op reports its index and leaves the last valid result unchanged, comparison of original vs simulated. Covers AC-01..AC-04 at the engine level.",
       "allowed": [
@@ -153,7 +177,6 @@
         "VERIFY.md",
         "docs/*",
         "scripts/*",
-        "e2e/*",
         "Dockerfile",
         ".dockerignore"
       ],

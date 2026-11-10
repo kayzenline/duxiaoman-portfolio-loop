@@ -69,10 +69,10 @@ def git(root, *args):
                           capture_output=True, text=True).stdout
 
 
-def changed_files(root, base):
+def changed_files(root, base, head='HEAD'):
     # --no-renames: a rename shows as delete + add, so the source path cannot hide. -z: exact names.
-    committed = [f for f in git(root, 'diff', '--name-only', '--no-renames', '-z', f'{base}...HEAD').split('\0') if f]
-    entries = git(root, 'status', '--porcelain', '--no-renames', '-z').split('\0')
+    committed = [f for f in git(root, 'diff', '--name-only', '--no-renames', '-z', f'{base}..{head}').split('\0') if f]
+    entries = git(root, 'status', '--porcelain', '--no-renames', '--untracked-files=all', '-z').split('\0')
     dirty = [e[3:] for e in entries if e]
     return sorted(set(committed + dirty))
 
@@ -96,26 +96,43 @@ def lock_spec(root, task_id, reason):
     relock = bool(git(root, 'tag', '--list', tag).strip())
     if relock and reason == 'initial spec':
         raise SystemExit(f'{tag} exists; re-locking requires --reason')
+    remote = remote_tag(root, tag)
+    if remote is UNREACHABLE:
+        raise SystemExit('origin is configured but unreachable; cannot publish the spec lock')
+    if remote is not None:  # publish first: a failed push must not leave the local lock moved
+        subprocess.run(['git', 'push', '-f', 'origin', f'HEAD:refs/tags/{tag}'], cwd=root, check=True, timeout=60,
+                       capture_output=True, env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
     git(root, 'tag', '-f', tag, 'HEAD')
-    if remote_tag(root, tag) is not None:
-        git(root, 'push', '-f', 'origin', f'refs/tags/{tag}')
     head = git(root, 'rev-parse', 'HEAD').strip()
     hashes = {p: sha(root / p) for p in t['spec']}
     entry = state['tasks'].setdefault(task_id, {})
-    entry.update(spec_commit=head, spec=hashes, status='spec_locked', failures=[])
+    unchanged = entry.get('spec') == hashes
+    entry.update(spec_commit=head, spec=hashes)
+    if not unchanged:  # only a real spec change resets the three-strike counter
+        entry.update(status='spec_locked', failures=[])
     write_state(root, state)
     journal(root, {'at': time.strftime('%FT%T%z'), 'task': task_id, 'commit': head,
                    'event': 'spec_relocked' if relock else 'spec_locked', 'reason': reason})
     return hashes
 
 
+UNREACHABLE = object()
+
+
 def remote_tag(root, tag):
-    """Commit the tag points to on origin; None if there is no origin (e.g. tests)."""
+    """Commit the tag points to on origin; None if no origin is configured;
+    UNREACHABLE if origin exists but cannot be queried (the caller fails closed)."""
     if subprocess.run(['git', 'remote', 'get-url', 'origin'], cwd=root, capture_output=True).returncode:
         return None
-    out = subprocess.run(['git', 'ls-remote', 'origin', f'refs/tags/{tag}^{{}}', f'refs/tags/{tag}'],
-                         cwd=root, capture_output=True, text=True).stdout.split('\n')
-    refs = dict(reversed(line.split('\t')) for line in out if '\t' in line)
+    try:
+        res = subprocess.run(['git', 'ls-remote', 'origin', f'refs/tags/{tag}^{{}}', f'refs/tags/{tag}'],
+                             cwd=root, capture_output=True, text=True, timeout=20,
+                             env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
+    except subprocess.TimeoutExpired:
+        return UNREACHABLE
+    if res.returncode:
+        return UNREACHABLE
+    refs = dict(reversed(line.split('\t')) for line in res.stdout.split('\n') if '\t' in line)
     return refs.get(f'refs/tags/{tag}^{{}}') or refs.get(f'refs/tags/{tag}') or ''
 
 
@@ -126,16 +143,18 @@ def check_spec(root, task):
     if subprocess.run(['git', 'merge-base', '--is-ancestor', tag, 'HEAD'], cwd=root).returncode:
         return [f'{tag} is not an ancestor of HEAD']
     remote = remote_tag(root, tag)
+    if remote is UNREACHABLE:
+        return [f'Cannot verify {tag} against origin (offline?); refusing to pass']
     if remote is not None and remote != git(root, 'rev-parse', f'{tag}^{{commit}}').strip():
         return [f'Local {tag} differs from origin; spec lock was moved without being pushed']
-    changed = git(root, 'diff', '--name-only', tag, '--', *task['spec']).split()
+    changed = [f for f in git(root, 'diff', '--name-only', '-z', tag, '--', *task['spec']).split('\0') if f]
     return [f'Acceptance test changed since lock ({tag}): {f}' for f in changed]
 
 
-def check_scope(root, task, base):
+def check_scope(root, task, base, head='HEAD'):
     allowed = task['allowed'] + task['spec'] + ALWAYS_ALLOWED
     errors = []
-    for f in changed_files(root, base):
+    for f in changed_files(root, base, head):
         if f.startswith('.loop/'):
             if not LOOP_LAYOUT.match(f):
                 errors.append(f'Unexpected file under .loop/ (not gate-generated layout): {f}')
@@ -145,9 +164,9 @@ def check_scope(root, task, base):
 
 
 def check_clean(root):
-    """A pass must describe a commit, so uncommitted work (outside .loop/runs/) is rejected.
+    """A pass must describe a commit, so uncommitted work outside .loop/ (gate-written) is rejected.
     --no-renames -z: a rename appears as delete + add, so both paths are checked exactly."""
-    entries = [e[3:] for e in git(root, 'status', '--porcelain', '--no-renames', '-z').split('\0') if e]
+    entries = [e[3:] for e in git(root, 'status', '--porcelain', '--no-renames', '--untracked-files=all', '-z').split('\0') if e]
     return [f'Uncommitted change, commit before gating: {f}' for f in entries if not f.startswith('.loop/')]
 
 
@@ -169,11 +188,12 @@ def run_checks(root, task, evidence):
     return results
 
 
-def review_prompt(root, cfg, task, base, checks):
+def review_prompt(root, cfg, task, base, checks, head='HEAD'):
     # Gate evidence (.loop/) is excluded: it is not implementation and old prompts would bloat the diff.
-    files = git(root, 'diff', '--stat=200', f'{base}...HEAD', '--', '.', ':(exclude).loop')
-    diff = git(root, 'diff', f'{base}...HEAD', '--', '.', ':(exclude).loop')
-    evidence = git(root, 'diff', '--name-status', '--no-renames', f'{base}...HEAD', '--', '.loop')
+    # `base` here is the merge-base SHA fixed at gate start, so this is exactly the reviewed range.
+    files = git(root, 'diff', '--stat=200', f'{base}..{head}', '--', '.', ':(exclude).loop')
+    diff = git(root, 'diff', f'{base}..{head}', '--', '.', ':(exclude).loop')
+    evidence = git(root, 'diff', '--name-status', '--no-renames', f'{base}..{head}', '--', '.loop')
     truncated = len(diff) > DIFF_LIMIT
     if truncated:
         diff = diff[:DIFF_LIMIT] + '\n[DIFF TRUNCATED: you MUST open every file in the list above that is not fully shown]'
@@ -237,11 +257,14 @@ def gate(root, task_id, base='main', skip_review=False):
     run_id = time.strftime('%Y%m%d-%H%M%S-') + task_id + '-' + uuid.uuid4().hex[:6]
     evidence = root / '.loop' / 'runs' / run_id
     evidence.mkdir(parents=True)
-    record = {'run': run_id, 'task': task_id, 'head': git(root, 'rev-parse', 'HEAD').strip(),
+    head = git(root, 'rev-parse', 'HEAD').strip()
+    # Fixed once: scope, reviewer diff and the recorded pass all use this same range (no TOCTOU).
+    base_sha = git(root, 'merge-base', base, head).strip()
+    record = {'run': run_id, 'task': task_id, 'head': head, 'base': base, 'base_sha': base_sha,
               'started': time.strftime('%FT%T%z'), 'stage': None, 'errors': []}
 
     for stage, fn in (('spec', lambda: check_spec(root, task)),
-                      ('scope', lambda: check_scope(root, task, base)),
+                      ('scope', lambda: check_scope(root, task, base_sha, head)),
                       ('clean', lambda: check_clean(root))):
         errors = fn()
         if errors:
@@ -251,6 +274,8 @@ def gate(root, task_id, base='main', skip_review=False):
         record['checks'] = run_checks(root, task, evidence)
         failed = [c for c in record['checks'] if c['exit'] != 0]
         dirtied = check_clean(root)
+        if git(root, 'rev-parse', 'HEAD').strip() != head:
+            dirtied.append('HEAD moved during the gate (a check committed?)')
         if dirtied and not failed:
             record.update(stage='clean', errors=['Checks modified the tree: ' + '; '.join(dirtied)])
         elif failed:
@@ -262,7 +287,7 @@ def gate(root, task_id, base='main', skip_review=False):
         else:
             workspace = Path(tempfile.mkdtemp(prefix='loop-review-')) / 'ws'
             try:
-                truncated, prompt = review_prompt(root, cfg, task, base, record['checks'])
+                truncated, prompt = review_prompt(root, cfg, task, base_sha, record['checks'], head)
                 record['diff_truncated'] = truncated
                 clean_checkout(root, record['head'], workspace)
                 v = reviewer.review(cfg['reviewer'], workspace, prompt, evidence)
@@ -283,7 +308,8 @@ def gate(root, task_id, base='main', skip_review=False):
 
     if record['stage'] == 'passed':
         entry.update(status='gate_passed', failures=[], last_pass=run_id, passed_head=record['head'])
-        git(root, 'tag', '-f', f'gate/{task_id}', record['head'])  # authoritative pass record
+        # Authoritative pass record: annotated tag on the reviewed head carrying the reviewed base.
+        git(root, 'tag', '-f', '-a', f'gate/{task_id}', '-m', f'base_sha={base_sha}\nrun={run_id}', head)
     elif record['stage'] in ('review_skipped', 'review_infra'):
         entry['status'] = 'needs_review'
     else:
@@ -294,7 +320,49 @@ def gate(root, task_id, base='main', skip_review=False):
         same = len(fails) >= MAX_SAME_FAILURE and len(set(fails[-MAX_SAME_FAILURE:])) == 1
         entry['status'] = 'blocked' if same else 'repair'
     entry['last_run'] = run_id
+    entry['base'] = base  # advisory; verify_pr reads base_sha from the gate tag
     write_state(root, state)
     journal(root, {'at': record['finished'], 'task': task_id, 'event': 'gate',
                    'stage': record['stage'], 'status': entry['status'], 'run': run_id, 'head': record['head']})
     return record, entry['status']
+
+
+def verify_pr(root, entry, task_id, pr, want_merged):
+    """Return a list of reasons the PR may NOT be recorded; empty means OK.
+
+    pr = {'headRefOid', 'baseRefOid', 'state'} from `gh pr view`. The PR's three-dot diff
+    starts at merge-base(baseRefOid, headRefOid); it must equal the merge-base the gate reviewed.
+    """
+    errors = []
+    if entry.get('status') not in ('gate_passed', 'pr_open'):
+        return ['task has not passed the gate']
+    tag = subprocess.run(['git', 'rev-parse', '--verify', '-q', f'gate/{task_id}^{{commit}}'],
+                         cwd=root, capture_output=True, text=True).stdout.strip()
+    if not tag or tag != entry.get('passed_head'):
+        return [f'gate/{task_id} tag missing or disagrees with state; re-run the gate']
+    kind = subprocess.run(['git', 'cat-file', '-t', f'refs/tags/gate/{task_id}'],
+                          cwd=root, capture_output=True, text=True).stdout.strip()
+    note = subprocess.run(['git', 'tag', '-l', '--format=%(contents)', f'gate/{task_id}'],
+                          cwd=root, capture_output=True, text=True).stdout.splitlines()
+    m = re.fullmatch(r'base_sha=([0-9a-f]{40})', note[0]) if kind == 'tag' and note else None
+    if not m:
+        return [f'gate/{task_id} is not an annotated gate tag with an exact base_sha line; re-run the gate']
+    reviewed = m.group(1)
+    mb = subprocess.run(['git', 'merge-base', pr['baseRefOid'], pr['headRefOid']],
+                        cwd=root, capture_output=True, text=True)
+    if mb.returncode:
+        return ['PR base/head commits not available locally; fetch first (failing closed)']
+    if mb.stdout.strip() != reviewed:
+        errors.append(f"PR diff starts at {mb.stdout.strip()[:8]}, gate reviewed from "
+                      f"{reviewed[:8]}: the PR would show unreviewed changes")
+    if pr['headRefOid'] != tag:
+        res = subprocess.run(['git', 'diff', '--name-status', '--no-renames', '-z', f'{tag}..{pr["headRefOid"]}'],
+                             cwd=root, capture_output=True, text=True)
+        parts = [x for x in res.stdout.split('\0') if x]
+        changes = list(zip(parts[0::2], parts[1::2]))
+        bad = [f'{st} {p}' for st, p in changes if not (st in ('A', 'M') and LOOP_LAYOUT.match(p))]
+        if res.returncode or bad:
+            errors.append(f'PR head differs from gate-passed head beyond gate evidence: {bad[:5]}')
+    if want_merged and pr.get('state') != 'MERGED':
+        errors.append(f"PR state is {pr.get('state')}")
+    return errors

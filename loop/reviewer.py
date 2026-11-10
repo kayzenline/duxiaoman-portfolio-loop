@@ -45,9 +45,20 @@ def stream(argv, prompt, cwd, out_path, idle_timeout, total_timeout):
     sel.register(p.stdout, selectors.EVENT_READ)
     start = last = time.monotonic()
     result, buf = None, b''
+    def handle(line):
+        nonlocal result
+        try:
+            event = json.loads(line)
+        except ValueError:
+            return
+        if event.get('type') == 'result':
+            if event.get('is_error'):
+                raise ReviewError('Reviewer returned is_error')
+            result = event.get('result', '')
+
     try:
         with open(out_path, 'wb') as out:
-            while True:
+            while result is None:  # the result event is final; never let idle time discard it
                 now = time.monotonic()
                 if now - last > idle_timeout:
                     raise ReviewError(f'Reviewer idle for {idle_timeout}s')
@@ -57,6 +68,8 @@ def stream(argv, prompt, cwd, out_path, idle_timeout, total_timeout):
                     continue
                 chunk = os.read(p.stdout.fileno(), 65536)
                 if not chunk:
+                    if buf.strip():
+                        handle(buf)  # final NDJSON line without trailing newline
                     break
                 last = time.monotonic()
                 out.write(chunk)
@@ -64,14 +77,14 @@ def stream(argv, prompt, cwd, out_path, idle_timeout, total_timeout):
                 buf += chunk
                 *lines, buf = buf.split(b'\n')
                 for line in lines:
-                    try:
-                        event = json.loads(line)
-                    except ValueError:
-                        continue
-                    if event.get('type') == 'result':
-                        if event.get('is_error'):
-                            raise ReviewError('Reviewer returned is_error')
-                        result = event.get('result', '')
+                    handle(line)
+        if result is not None and p.poll() is None:
+            try:
+                return p.wait(timeout=10), result  # a real non-zero exit still fails the review
+            except subprocess.TimeoutExpired:
+                os.killpg(p.pid, signal.SIGKILL)  # verdict already captured; reap a lingering CLI
+                p.wait()
+                return 0, result
         return p.wait(timeout=10), result
     except BaseException:
         try:

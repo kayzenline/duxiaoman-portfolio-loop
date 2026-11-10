@@ -3,9 +3,10 @@
   "spec": {
     "backend/tests/test_engine.py": "34155bef14c889639b66c2916850df3328aaaeb6d151b95da0d0e289bed3ed74"
   },
-  "status": "gate_passed",
+  "status": "merged",
   "failures": [],
   "last_pass": "20261110-230627-T1-engine-fb4ef3",
   "passed_head": "91e477bcb2985cce33bbc244c66e9551253aa7c7",
-  "last_run": "20261110-230627-T1-engine-fb4ef3"
+  "last_run": "20261110-230627-T1-engine-fb4ef3",
+  "pr": "https://github.com/kayzenline/duxiaoman-portfolio-loop/pull/1"
 }

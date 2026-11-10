@@ -4,9 +4,10 @@
     "backend/tests/test_api.py": "3d9fd0baca646615ec651e1e74b19105fa3aca79509536090d13218f50eebf14",
     "backend/tests/test_restart.py": "dd930356da8c7075b806b8d0e6dc56dc6722b4ec962e46b54ffce91d3f6922bd"
   },
-  "status": "gate_passed",
+  "status": "merged",
   "failures": [],
   "last_pass": "20261110-230628-T2-api-34235b",
   "passed_head": "91e85bbcfa39c75ae6c89b2fdab4f4ecee6f14a0",
-  "last_run": "20261110-230628-T2-api-34235b"
+  "last_run": "20261110-230628-T2-api-34235b",
+  "pr": "https://github.com/kayzenline/duxiaoman-portfolio-loop/pull/2"
 }

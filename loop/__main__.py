@@ -1,6 +1,7 @@
 """python -m loop {status|spec|gate|mark} — see loop/README.md."""
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -46,33 +47,17 @@ def main(argv=None):
     if a.cmd == 'mark':
         state = g.read_state(root)
         e = state['tasks'].setdefault(a.task, {})
-        if e.get('status') not in ('gate_passed', 'pr_open'):
-            sys.exit('Refusing: task has not passed the gate')
-        pr = json.loads(subprocess.run(['gh', 'pr', 'view', a.pr, '--json', 'headRefOid,state,url'],
+        subprocess.run(['git', 'fetch', '-q', 'origin'], cwd=root, check=True, timeout=120,
+                       env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
+        pr = json.loads(subprocess.run(['gh', 'pr', 'view', a.pr, '--json', 'headRefOid,baseRefOid,state,url'],
                                        check=True, capture_output=True, text=True, cwd=root).stdout)
-        tag = subprocess.run(['git', 'rev-parse', '--verify', '-q', f'gate/{a.task}^{{commit}}'],
-                             cwd=root, capture_output=True, text=True).stdout.strip()
-        if not tag or tag != e.get('passed_head'):
-            sys.exit(f'Refusing: gate/{a.task} tag missing or disagrees with state; re-run the gate')
-        passed = tag
-        if pr['headRefOid'] != passed:
-            # Allowed: commits after the pass that only add gate evidence under .loop/.
-            extra = subprocess.run(['git', 'diff', '--name-status', '--no-renames', '-z',
-                                    f'{passed}..{pr["headRefOid"]}'], cwd=root, capture_output=True, text=True)
-            parts = [x for x in extra.stdout.split('\0') if x]
-            changes = list(zip(parts[0::2], parts[1::2]))  # (status, path); deletions included
-            files = [f'{st} {path}' for st, path in changes]
-            if extra.returncode or not all(path.startswith('.loop/') and st in ('A', 'M') for st, path in changes):
-                sys.exit(f"Refusing: PR head {pr['headRefOid'][:8]} differs from gate-passed head "
-                         f"{str(passed)[:8]} beyond .loop/ evidence: {files[:5]}")
-        if a.status == 'merged' and pr['state'] != 'MERGED':
-            sys.exit(f"Refusing: PR state is {pr['state']}")
-        a.pr = pr['url']
-        e.update(status=a.status, pr=a.pr)
+        errors = g.verify_pr(root, e, a.task, pr, a.status == 'merged')
+        if errors:
+            sys.exit('Refusing: ' + '; '.join(errors))
+        e.update(status=a.status, pr=pr['url'])
         g.write_state(root, state)
-        g.journal(root, {'at': time.strftime('%FT%T%z'), 'task': a.task, 'event': a.status, 'pr': a.pr})
+        g.journal(root, {'at': time.strftime('%FT%T%z'), 'task': a.task, 'event': a.status, 'pr': pr['url']})
         return 0
-
 
 if __name__ == '__main__':
     raise SystemExit(main())

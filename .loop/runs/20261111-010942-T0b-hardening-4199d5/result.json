@@ -1,0 +1,28 @@
+{
+  "run": "20261111-010942-T0b-hardening-4199d5",
+  "task": "T0b-hardening",
+  "head": "170ff94e6d9205f7566b00325009dc49b129a0b8",
+  "base": "main",
+  "base_sha": "ddae3c91222af94f1d292ea7f207db9e592e3616",
+  "started": "2026-11-11T01:09:42+1100",
+  "stage": "review_skipped",
+  "errors": [],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "loop/tests",
+        "-t",
+        "."
+      ],
+      "exit": 0,
+      "seconds": 26.5,
+      "log": ".loop/runs/20261111-010942-T0b-hardening-4199d5/check-0.log"
+    }
+  ],
+  "finished": "2026-11-11T01:10:10+1100"
+}
