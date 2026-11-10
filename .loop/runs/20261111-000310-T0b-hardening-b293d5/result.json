@@ -1,0 +1,46 @@
+{
+  "run": "20261111-000310-T0b-hardening-b293d5",
+  "task": "T0b-hardening",
+  "head": "bbc419770866e253d95b73e5170042077e4c6682",
+  "started": "2026-11-11T00:03:10+1100",
+  "stage": "review",
+  "errors": [
+    "loop/__main__.py:59 Merge-order allowance checks whether the live branch name stored at gate time (loop/gate.py entry['base']) is an ancestor of local main. Local main can contain that branch while the GitHub PR base does not, so mark accepts the same gated head when the PR diff still includes commits the gate excluded as base. If the base branch was deleted or moved after merge, the same check either refuses a PR GitHub retargeted to main or accepts one whose base commit is no longer the commit that was diffed."
+  ],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "loop/tests",
+        "-t",
+        "."
+      ],
+      "exit": 0,
+      "seconds": 22.1,
+      "log": ".loop/runs/20261111-000310-T0b-hardening-b293d5/check-0.log"
+    }
+  ],
+  "diff_truncated": false,
+  "review": {
+    "verdict": "fail",
+    "blocking": [
+      {
+        "file": "loop/__main__.py",
+        "line": 59,
+        "issue": "Merge-order allowance checks whether the live branch name stored at gate time (loop/gate.py entry['base']) is an ancestor of local main. Local main can contain that branch while the GitHub PR base does not, so mark accepts the same gated head when the PR diff still includes commits the gate excluded as base. If the base branch was deleted or moved after merge, the same check either refuses a PR GitHub retargeted to main or accepts one whose base commit is no longer the commit that was diffed."
+      }
+    ],
+    "suggestions": [
+      "Snapshot git rev-parse of the gate base and compare that SHA to the PR baseRefOid; fail closed when the object is not available locally.",
+      "In stream(), return 0 only after the linger SIGKILL. If p.wait() completes, return that status so review() still rejects a non-zero reviewer exit.",
+      "remote_tag treats every ls-remote failure as offline and can block 20s before skipping the tamper check. Limit that to timeout or network errors and set GIT_TERMINAL_PROMPT=0.",
+      "There is no test for mark (wrong base, base already merged, evidence outside LOOP_LAYOUT). test_unexpected_loop_paths_are_rejected only matches the regex, and test_relock does not show that a real spec change still clears failures.",
+      "check_clean still exempts every path under .loop/, and gitignored files can still change check results."
+    ]
+  },
+  "finished": "2026-11-11T00:27:50+1100"
+}
