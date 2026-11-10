@@ -97,7 +97,7 @@ def lock_spec(root, task_id, reason):
     if relock and reason == 'initial spec':
         raise SystemExit(f'{tag} exists; re-locking requires --reason')
     git(root, 'tag', '-f', tag, 'HEAD')
-    if remote_tag(root, tag) is not None:
+    if remote_tag(root, tag) is not None:  # push (and fail loudly) whenever an origin is configured
         git(root, 'push', '-f', 'origin', f'refs/tags/{tag}')
     head = git(root, 'rev-parse', 'HEAD').strip()
     hashes = {p: sha(root / p) for p in t['spec']}
@@ -112,17 +112,22 @@ def lock_spec(root, task_id, reason):
     return hashes
 
 
+UNREACHABLE = object()
+
+
 def remote_tag(root, tag):
-    """Commit the tag points to on origin; None if there is no origin or it is unreachable (offline)."""
+    """Commit the tag points to on origin; None if no origin is configured;
+    UNREACHABLE if origin exists but cannot be queried (the caller fails closed)."""
     if subprocess.run(['git', 'remote', 'get-url', 'origin'], cwd=root, capture_output=True).returncode:
         return None
     try:
         res = subprocess.run(['git', 'ls-remote', 'origin', f'refs/tags/{tag}^{{}}', f'refs/tags/{tag}'],
-                             cwd=root, capture_output=True, text=True, timeout=20)
+                             cwd=root, capture_output=True, text=True, timeout=20,
+                             env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
     except subprocess.TimeoutExpired:
-        return None
+        return UNREACHABLE
     if res.returncode:
-        return None
+        return UNREACHABLE
     refs = dict(reversed(line.split('\t')) for line in res.stdout.split('\n') if '\t' in line)
     return refs.get(f'refs/tags/{tag}^{{}}') or refs.get(f'refs/tags/{tag}') or ''
 
@@ -134,6 +139,8 @@ def check_spec(root, task):
     if subprocess.run(['git', 'merge-base', '--is-ancestor', tag, 'HEAD'], cwd=root).returncode:
         return [f'{tag} is not an ancestor of HEAD']
     remote = remote_tag(root, tag)
+    if remote is UNREACHABLE:
+        return [f'Cannot verify {tag} against origin (offline?); refusing to pass']
     if remote is not None and remote != git(root, 'rev-parse', f'{tag}^{{commit}}').strip():
         return [f'Local {tag} differs from origin; spec lock was moved without being pushed']
     changed = [f for f in git(root, 'diff', '--name-only', '-z', tag, '--', *task['spec']).split('\0') if f]
@@ -303,7 +310,41 @@ def gate(root, task_id, base='main', skip_review=False):
         entry['status'] = 'blocked' if same else 'repair'
     entry['last_run'] = run_id
     entry['base'] = base
+    entry['base_sha'] = git(root, 'merge-base', base, 'HEAD').strip()  # the diff the reviewer saw starts here
     write_state(root, state)
     journal(root, {'at': record['finished'], 'task': task_id, 'event': 'gate',
                    'stage': record['stage'], 'status': entry['status'], 'run': run_id, 'head': record['head']})
     return record, entry['status']
+
+
+def verify_pr(root, entry, task_id, pr, want_merged):
+    """Return a list of reasons the PR may NOT be recorded; empty means OK.
+
+    pr = {'headRefOid', 'baseRefOid', 'state'} from `gh pr view`. The PR's three-dot diff
+    starts at merge-base(baseRefOid, headRefOid); it must equal the merge-base the gate reviewed.
+    """
+    errors = []
+    if entry.get('status') not in ('gate_passed', 'pr_open'):
+        return ['task has not passed the gate']
+    tag = subprocess.run(['git', 'rev-parse', '--verify', '-q', f'gate/{task_id}^{{commit}}'],
+                         cwd=root, capture_output=True, text=True).stdout.strip()
+    if not tag or tag != entry.get('passed_head'):
+        return [f'gate/{task_id} tag missing or disagrees with state; re-run the gate']
+    mb = subprocess.run(['git', 'merge-base', pr['baseRefOid'], pr['headRefOid']],
+                        cwd=root, capture_output=True, text=True)
+    if mb.returncode:
+        return ['PR base/head commits not available locally; fetch first (failing closed)']
+    if mb.stdout.strip() != entry.get('base_sha'):
+        errors.append(f"PR diff starts at {mb.stdout.strip()[:8]}, gate reviewed from "
+                      f"{str(entry.get('base_sha'))[:8]}: the PR would show unreviewed changes")
+    if pr['headRefOid'] != tag:
+        res = subprocess.run(['git', 'diff', '--name-status', '--no-renames', '-z', f'{tag}..{pr["headRefOid"]}'],
+                             cwd=root, capture_output=True, text=True)
+        parts = [x for x in res.stdout.split('\0') if x]
+        changes = list(zip(parts[0::2], parts[1::2]))
+        bad = [f'{st} {p}' for st, p in changes if not (st in ('A', 'M') and LOOP_LAYOUT.match(p))]
+        if res.returncode or bad:
+            errors.append(f'PR head differs from gate-passed head beyond gate evidence: {bad[:5]}')
+    if want_merged and pr.get('state') != 'MERGED':
+        errors.append(f"PR state is {pr.get('state')}")
+    return errors

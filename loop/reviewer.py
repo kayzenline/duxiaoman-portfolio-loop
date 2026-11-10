@@ -80,11 +80,11 @@ def stream(argv, prompt, cwd, out_path, idle_timeout, total_timeout):
                     handle(line)
         if result is not None and p.poll() is None:
             try:
-                p.wait(timeout=10)
+                return p.wait(timeout=10), result  # a real non-zero exit still fails the review
             except subprocess.TimeoutExpired:
                 os.killpg(p.pid, signal.SIGKILL)  # verdict already captured; reap a lingering CLI
                 p.wait()
-            return 0, result
+                return 0, result
         return p.wait(timeout=10), result
     except BaseException:
         try:
