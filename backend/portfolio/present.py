@@ -33,4 +33,5 @@ def valuation(snap, v):
                        'threshold': pct(a.threshold),
                        'message': f'{KIND_LABEL[a.kind]}超限：{target} 占比 {pct(a.ratio)}%，超过阈值 {pct(a.threshold)}%'})
     return {'total': money(v.total_cents), 'cash': money(v.cash_cents), 'cash_weight': pct(v.cash_weight),
+            'held_count': sum(1 for p in v.positions.values() if p.quantity > 0),
             'positions': positions, 'industries': industries, 'alerts': alerts}

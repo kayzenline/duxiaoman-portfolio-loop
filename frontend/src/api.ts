@@ -7,7 +7,7 @@ export interface Position { symbol: string; name: string; industry: string; pric
 export interface IndustryRow { industry: string; value: string; weight: string; over_threshold: boolean }
 export interface Alert { kind: 'instrument' | 'industry'; target: string; label: string; ratio: string;
   threshold: string; message: string }
-export interface Valuation { total: string; cash: string; cash_weight: string; positions: Position[];
+export interface Valuation { total: string; cash: string; cash_weight: string; held_count: number; positions: Position[];
   industries: IndustryRow[]; alerts: Alert[] }
 export interface Portfolio { portfolio: { id: string; name: string };
   snapshot: { id: string; at: string; currency: string };

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, RequestFailed, type Alert, type ApiError, type Op, type Portfolio, type Scenario,
   type ScenarioSummary, type Side, type Simulation, type Valuation } from './api';
 import { money, pct, sideLabel, snapshotTime } from './format';
@@ -8,11 +8,15 @@ type Load<T> = { status: 'loading' } | { status: 'error'; error: ApiError } | { 
 const asError = (e: unknown): ApiError =>
   e instanceof RequestFailed ? e.error : { code: 'UNKNOWN', message: String(e) };
 
-// Text from the quantity box goes to the backend as-is when it is not numeric, so the backend
-// (not the browser) decides validity: "1.5" -> 1.5 -> rejected, "abc" -> "abc" -> rejected.
+// Only a canonical digit string becomes a JSON integer; anything else ("1.0", "1e2", "0x10", "abc",
+// or an integer beyond JS's safe range) is sent verbatim so the backend - not the browser - rejects it.
 const parseQty = (text: string): unknown => {
   const t = text.trim();
-  return t !== '' && Number.isFinite(Number(t)) ? Number(t) : t;
+  if (/^-?(0|[1-9]\d*)$/.test(t)) {
+    const n = Number(t);
+    if (Number.isSafeInteger(n)) return n;
+  }
+  return t;
 };
 
 export default function App() {
@@ -24,6 +28,7 @@ export default function App() {
   const [error, setError] = useState<ApiError | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const seq = useRef(0); // only the latest request may update the screen
 
   const loadPortfolio = useCallback(() => {
     setPortfolio({ status: 'loading' });
@@ -38,14 +43,16 @@ export default function App() {
 
   // Every change replays the whole sequence on the backend; the draft only advances on success.
   const replay = async (next: Op[]) => {
+    const id = ++seq.current;
     setBusy(true); setNotice(null);
     try {
       if (next.length === 0) { setOps([]); setSim(null); setError(null); return; }
       const result = await api.simulate(next);
+      if (id !== seq.current) return;
       setOps(next); setSim(result); setError(null);
     } catch (e) {
-      setError(asError(e));
-    } finally { setBusy(false); }
+      if (id === seq.current) setError(asError(e));
+    } finally { if (id === seq.current) setBusy(false); }
   };
 
   const save = async (name: string) => {
@@ -58,17 +65,22 @@ export default function App() {
     } catch (e) { setError(asError(e)); return false; } finally { setBusy(false); }
   };
 
-  const open = async (id: number) => {
+  const open = async (scenarioId: number) => {
+    const id = ++seq.current;
     setBusy(true); setNotice(null);
-    try { setViewing(await api.scenario(id)); setError(null); }
-    catch (e) { setError(asError(e)); } finally { setBusy(false); }
+    try {
+      const s = await api.scenario(scenarioId);
+      if (id === seq.current) { setViewing(s); setError(null); }
+    } catch (e) {
+      if (id === seq.current) setError(asError(e));
+    } finally { if (id === seq.current) setBusy(false); }
   };
 
   if (portfolio.status === 'loading') return <main className="state">正在加载组合…</main>;
   if (portfolio.status === 'error') return (
     <main className="state" role="alert">
       <p>组合加载失败：{portfolio.error.message}</p>
-      <button onClick={loadPortfolio}>重试</button>
+      <button onClick={() => { loadPortfolio(); loadScenarios(); }}>重试</button>
     </main>);
 
   const p = portfolio.data;
@@ -86,7 +98,7 @@ export default function App() {
       <div className="layout">
         <section className="col">
           <Overview v={p.valuation} />
-          <Alerts alerts={p.valuation.alerts} testId="alerts" title="当前组合集中度提醒" />
+          <Alerts alerts={p.valuation.alerts} testId="alerts" title="原组合集中度提醒（快照持仓）" />
           <Holdings v={p.valuation} />
         </section>
 
@@ -107,7 +119,7 @@ export default function App() {
               {error.index !== undefined && !viewing ? <strong>操作未生效。</strong> : null}{error.message}
             </div>)}
           {notice && <div className="notice" role="status">{notice}</div>}
-          <Saved list={scenarios} onOpen={open} activeId={viewing?.id} />
+          <Saved list={scenarios} onOpen={open} activeId={viewing?.id} busy={busy} onRetry={loadScenarios} />
         </aside>
       </div>
 
@@ -120,12 +132,11 @@ export default function App() {
 }
 
 function Overview({ v }: { v: Valuation }) {
-  const held = v.positions.filter(x => x.quantity > 0).length;
   return (
     <div className="cards">
       <Card label="总资产（元）" value={money(v.total)} testId="total" />
       <Card label="现金（元）" value={money(v.cash)} sub={`占比 ${pct(v.cash_weight)}`} testId="cash" />
-      <Card label="持仓标的" value={`${held} 只`} />
+      <Card label="持仓标的" value={`${v.held_count} 只`} />
       <Card label="超限提醒" value={`${v.alerts.length} 项`} warn={v.alerts.length > 0} />
     </div>);
 }
@@ -220,16 +231,17 @@ function OpsList({ ops, onRemove }: { ops: Op[]; onRemove?: (i: number) => void 
     </ol>);
 }
 
-function Saved({ list, onOpen, activeId }: { list: Load<ScenarioSummary[]>; onOpen: (id: number) => void; activeId?: number }) {
+function Saved({ list, onOpen, activeId, busy, onRetry }: { list: Load<ScenarioSummary[]>; onOpen: (id: number) => void;
+  activeId?: number; busy: boolean; onRetry: () => void }) {
   return (
     <div className="panel" data-testid="saved-list">
       <h2>已保存方案</h2>
       {list.status === 'loading' && <p className="muted">加载中…</p>}
-      {list.status === 'error' && <p className="error">方案列表加载失败：{list.error.message}</p>}
+      {list.status === 'error' && <p className="error">方案列表加载失败：{list.error.message} <button className="link" onClick={onRetry}>重试</button></p>}
       {list.status === 'ready' && (list.data.length === 0 ? <p className="muted">暂无已保存方案。</p> : (
         <ul className="saved">
           {list.data.map(s => (
-            <li key={s.id}><button className={s.id === activeId ? 'active' : ''} onClick={() => onOpen(s.id)}>
+            <li key={s.id}><button className={s.id === activeId ? 'active' : ''} disabled={busy} onClick={() => onOpen(s.id)}>
               {s.name} <span className="muted">· {s.op_count} 笔 · #{s.id}</span></button></li>))}
         </ul>))}
     </div>);
