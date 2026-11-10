@@ -291,6 +291,14 @@ class GateFlow(unittest.TestCase):
         self.assertIn(f"base_sha={record['base_sha']}", note)
         self.assertEqual(record['base_sha'], self.rev('main'))
 
+    def test_verify_pr_rejects_lightweight_gate_tag(self):
+        self.commit('src/x.py', 'x = 1\n')
+        g.gate(self.root, 'T')
+        entry = g.read_state(self.root)['tasks']['T']
+        self.sh('git', 'tag', '-f', 'gate/T', self.rev())  # replace annotated tag with a lightweight one
+        pr = {'headRefOid': self.rev(), 'baseRefOid': self.rev('main'), 'state': 'OPEN'}
+        self.assertTrue(any('annotated' in e for e in g.verify_pr(self.root, entry, 'T', pr, False)))
+
     def test_verify_pr_refuses_ungated_task(self):
         pr = {'headRefOid': self.rev(), 'baseRefOid': self.rev('main'), 'state': 'OPEN'}
         self.assertEqual(g.verify_pr(self.root, {}, 'T', pr, False), ['task has not passed the gate'])
