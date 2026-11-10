@@ -223,6 +223,59 @@ class GateFlow(unittest.TestCase):
         g.lock_spec(self.root, 'T', 'rebased, spec unchanged')
         self.assertEqual(len(g.read_state(self.root)['tasks']['T']['failures']), 1)
 
+    def rev(self, ref='HEAD'):
+        return self.sh('git', 'rev-parse', ref).stdout.decode().strip()
+
+    def test_verify_pr_requires_pr_diff_to_equal_reviewed_diff(self):
+        # stacked slice: gate T against parent branch `mid`, which is not yet in main
+        self.sh('git', 'checkout', '-q', '-b', 'mid', 'main')
+        (self.root / 'mid.txt').write_text('m\n')
+        self.sh('git', 'add', 'mid.txt')
+        self.sh('git', 'commit', '-qm', 'mid')
+        self.sh('git', 'checkout', '-q', 'feat')
+        self.sh('git', 'merge', '-q', 'mid')
+        self.commit('src/x.py', 'x = 1\n')
+        record, status = g.gate(self.root, 'T', base='mid')
+        self.assertEqual(status, 'gate_passed')
+        entry = g.read_state(self.root)['tasks']['T']
+        pr = {'headRefOid': self.rev(), 'baseRefOid': self.rev('main'), 'state': 'OPEN'}
+        self.assertTrue(any('unreviewed' in e for e in g.verify_pr(self.root, entry, 'T', pr, False)))
+        pr['baseRefOid'] = self.rev('mid')
+        self.assertEqual(g.verify_pr(self.root, entry, 'T', pr, False), [])
+        # parent merged into main with a merge commit -> retargeting to main is now equivalent
+        self.sh('git', 'checkout', '-q', 'main')
+        self.sh('git', 'merge', '-q', '--no-ff', 'mid', '-m', 'merge mid')
+        self.sh('git', 'checkout', '-q', 'feat')
+        pr['baseRefOid'] = self.rev('main')
+        self.assertEqual(g.verify_pr(self.root, entry, 'T', pr, False), [])
+        self.assertTrue(any('MERGED' in e or 'state' in e for e in g.verify_pr(self.root, entry, 'T', pr, True)))
+
+    def test_verify_pr_allows_only_gate_evidence_after_pass(self):
+        self.commit('src/x.py', 'x = 1\n')
+        g.gate(self.root, 'T')
+        entry = g.read_state(self.root)['tasks']['T']
+        ev = self.root / '.loop/runs/20261111-000000-T-abc123/result.json'
+        ev.parent.mkdir(parents=True, exist_ok=True)
+        ev.write_text('{}\n')
+        self.sh('git', 'add', '-f', str(ev))
+        self.sh('git', 'commit', '-qm', 'evidence')
+        pr = {'headRefOid': self.rev(), 'baseRefOid': self.rev('main'), 'state': 'OPEN'}
+        self.assertEqual(g.verify_pr(self.root, entry, 'T', pr, False), [])
+        self.commit('src/sneaky.py', 'y = 2\n')
+        pr['headRefOid'] = self.rev()
+        self.assertTrue(any('beyond gate evidence' in e for e in g.verify_pr(self.root, entry, 'T', pr, False)))
+
+    def test_verify_pr_refuses_ungated_task(self):
+        pr = {'headRefOid': self.rev(), 'baseRefOid': self.rev('main'), 'state': 'OPEN'}
+        self.assertEqual(g.verify_pr(self.root, {}, 'T', pr, False), ['task has not passed the gate'])
+
+    def test_relock_with_changed_spec_clears_failures(self):
+        self.commit('src/bad', 'x\n')
+        g.gate(self.root, 'T')
+        self.commit('spec_test.py', 'assert 1 == 1\n')
+        g.lock_spec(self.root, 'T', 'spec genuinely changed')
+        self.assertEqual(g.read_state(self.root)['tasks']['T']['failures'], [])
+
     def test_reviewer_fail_then_same_failure_three_times_blocks(self):
         import os
         self.commit('src/x.py', 'x = 1\n')
