@@ -118,6 +118,8 @@ def load_snapshot(path=SEED):
     if rules.get('comparison') != 'strictly_greater_than' or not rules.get('cash_in_denominator') \
             or rules.get('cash_in_industry'):
         raise SeedError('Unsupported rule set; engine implements the VC-FIN-001 rules only')
+    if to_cents(rules.get('fees', '0.00'), 'fees') != 0:
+        raise SeedError('Non-zero fees are not supported; the engine is fee-free by task scope')
     instruments, holdings = {}, {}
     for item in raw['instruments']:
         sym = item['symbol']

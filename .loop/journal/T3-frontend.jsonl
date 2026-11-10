@@ -1,1 +1,2 @@
 {"at": "2026-11-10T23:06:17+1100", "task": "T3-frontend", "commit": "8c1d63b54281a8b3ade892f99b313622e2ea6147", "event": "spec_locked", "reason": "initial spec"}
+{"at": "2026-11-10T23:06:29+1100", "task": "T3-frontend", "event": "gate", "stage": "scope", "status": "repair", "run": "20261110-230628-T3-frontend-779bb4", "head": "2b97fe947959198eac1860c1f267d953ff0a26b1"}

@@ -3,6 +3,9 @@
   "spec": {
     "e2e/flow.spec.ts": "35afffe06d344f444f0cade91c6389382b599ba76f225081b1ca0be93a5c2387"
   },
-  "status": "spec_locked",
-  "failures": []
+  "status": "repair",
+  "failures": [
+    "scope:Out of scope change: e2e/.gitignore|Out of scope change: e2e/package-lock.json|Out of scope change: e2e/package.json|Out of scope change: e2e/playwright.config.ts"
+  ],
+  "last_run": "20261110-230628-T3-frontend-779bb4"
 }
