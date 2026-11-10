@@ -1,6 +1,7 @@
 """python -m loop {status|spec|gate|mark} — see loop/README.md."""
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -46,7 +47,8 @@ def main(argv=None):
     if a.cmd == 'mark':
         state = g.read_state(root)
         e = state['tasks'].setdefault(a.task, {})
-        subprocess.run(['git', 'fetch', '-q', 'origin'], cwd=root, check=True)
+        subprocess.run(['git', 'fetch', '-q', 'origin'], cwd=root, check=True, timeout=120,
+                       env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
         pr = json.loads(subprocess.run(['gh', 'pr', 'view', a.pr, '--json', 'headRefOid,baseRefOid,state,url'],
                                        check=True, capture_output=True, text=True, cwd=root).stdout)
         errors = g.verify_pr(root, e, a.task, pr, a.status == 'merged')

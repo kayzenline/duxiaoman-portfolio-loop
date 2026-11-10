@@ -69,9 +69,9 @@ def git(root, *args):
                           capture_output=True, text=True).stdout
 
 
-def changed_files(root, base):
+def changed_files(root, base, head='HEAD'):
     # --no-renames: a rename shows as delete + add, so the source path cannot hide. -z: exact names.
-    committed = [f for f in git(root, 'diff', '--name-only', '--no-renames', '-z', f'{base}..HEAD').split('\0') if f]
+    committed = [f for f in git(root, 'diff', '--name-only', '--no-renames', '-z', f'{base}..{head}').split('\0') if f]
     entries = git(root, 'status', '--porcelain', '--no-renames', '--untracked-files=all', '-z').split('\0')
     dirty = [e[3:] for e in entries if e]
     return sorted(set(committed + dirty))
@@ -96,13 +96,13 @@ def lock_spec(root, task_id, reason):
     relock = bool(git(root, 'tag', '--list', tag).strip())
     if relock and reason == 'initial spec':
         raise SystemExit(f'{tag} exists; re-locking requires --reason')
-    git(root, 'tag', '-f', tag, 'HEAD')
     remote = remote_tag(root, tag)
     if remote is UNREACHABLE:
         raise SystemExit('origin is configured but unreachable; cannot publish the spec lock')
-    if remote is not None:
-        subprocess.run(['git', 'push', '-f', 'origin', f'refs/tags/{tag}'], cwd=root, check=True, timeout=60,
+    if remote is not None:  # publish first: a failed push must not leave the local lock moved
+        subprocess.run(['git', 'push', '-f', 'origin', f'HEAD:refs/tags/{tag}'], cwd=root, check=True, timeout=60,
                        capture_output=True, env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
+    git(root, 'tag', '-f', tag, 'HEAD')
     head = git(root, 'rev-parse', 'HEAD').strip()
     hashes = {p: sha(root / p) for p in t['spec']}
     entry = state['tasks'].setdefault(task_id, {})
@@ -151,10 +151,10 @@ def check_spec(root, task):
     return [f'Acceptance test changed since lock ({tag}): {f}' for f in changed]
 
 
-def check_scope(root, task, base):
+def check_scope(root, task, base, head='HEAD'):
     allowed = task['allowed'] + task['spec'] + ALWAYS_ALLOWED
     errors = []
-    for f in changed_files(root, base):
+    for f in changed_files(root, base, head):
         if f.startswith('.loop/'):
             if not LOOP_LAYOUT.match(f):
                 errors.append(f'Unexpected file under .loop/ (not gate-generated layout): {f}')
@@ -188,12 +188,12 @@ def run_checks(root, task, evidence):
     return results
 
 
-def review_prompt(root, cfg, task, base, checks):
+def review_prompt(root, cfg, task, base, checks, head='HEAD'):
     # Gate evidence (.loop/) is excluded: it is not implementation and old prompts would bloat the diff.
     # `base` here is the merge-base SHA fixed at gate start, so this is exactly the reviewed range.
-    files = git(root, 'diff', '--stat=200', f'{base}..HEAD', '--', '.', ':(exclude).loop')
-    diff = git(root, 'diff', f'{base}..HEAD', '--', '.', ':(exclude).loop')
-    evidence = git(root, 'diff', '--name-status', '--no-renames', f'{base}..HEAD', '--', '.loop')
+    files = git(root, 'diff', '--stat=200', f'{base}..{head}', '--', '.', ':(exclude).loop')
+    diff = git(root, 'diff', f'{base}..{head}', '--', '.', ':(exclude).loop')
+    evidence = git(root, 'diff', '--name-status', '--no-renames', f'{base}..{head}', '--', '.loop')
     truncated = len(diff) > DIFF_LIMIT
     if truncated:
         diff = diff[:DIFF_LIMIT] + '\n[DIFF TRUNCATED: you MUST open every file in the list above that is not fully shown]'
@@ -264,7 +264,7 @@ def gate(root, task_id, base='main', skip_review=False):
               'started': time.strftime('%FT%T%z'), 'stage': None, 'errors': []}
 
     for stage, fn in (('spec', lambda: check_spec(root, task)),
-                      ('scope', lambda: check_scope(root, task, base_sha)),
+                      ('scope', lambda: check_scope(root, task, base_sha, head)),
                       ('clean', lambda: check_clean(root))):
         errors = fn()
         if errors:
@@ -274,6 +274,8 @@ def gate(root, task_id, base='main', skip_review=False):
         record['checks'] = run_checks(root, task, evidence)
         failed = [c for c in record['checks'] if c['exit'] != 0]
         dirtied = check_clean(root)
+        if git(root, 'rev-parse', 'HEAD').strip() != head:
+            dirtied.append('HEAD moved during the gate (a check committed?)')
         if dirtied and not failed:
             record.update(stage='clean', errors=['Checks modified the tree: ' + '; '.join(dirtied)])
         elif failed:
@@ -285,7 +287,7 @@ def gate(root, task_id, base='main', skip_review=False):
         else:
             workspace = Path(tempfile.mkdtemp(prefix='loop-review-')) / 'ws'
             try:
-                truncated, prompt = review_prompt(root, cfg, task, base_sha, record['checks'])
+                truncated, prompt = review_prompt(root, cfg, task, base_sha, record['checks'], head)
                 record['diff_truncated'] = truncated
                 clean_checkout(root, record['head'], workspace)
                 v = reviewer.review(cfg['reviewer'], workspace, prompt, evidence)
@@ -338,11 +340,14 @@ def verify_pr(root, entry, task_id, pr, want_merged):
                          cwd=root, capture_output=True, text=True).stdout.strip()
     if not tag or tag != entry.get('passed_head'):
         return [f'gate/{task_id} tag missing or disagrees with state; re-run the gate']
+    kind = subprocess.run(['git', 'cat-file', '-t', f'refs/tags/gate/{task_id}'],
+                          cwd=root, capture_output=True, text=True).stdout.strip()
     note = subprocess.run(['git', 'tag', '-l', '--format=%(contents)', f'gate/{task_id}'],
-                          cwd=root, capture_output=True, text=True).stdout
-    reviewed = dict(line.split('=', 1) for line in note.splitlines() if '=' in line).get('base_sha')
-    if not reviewed:
-        return [f'gate/{task_id} tag carries no reviewed base; re-run the gate']
+                          cwd=root, capture_output=True, text=True).stdout.splitlines()
+    m = re.fullmatch(r'base_sha=([0-9a-f]{40})', note[0]) if kind == 'tag' and note else None
+    if not m:
+        return [f'gate/{task_id} is not an annotated gate tag with an exact base_sha line; re-run the gate']
+    reviewed = m.group(1)
     mb = subprocess.run(['git', 'merge-base', pr['baseRefOid'], pr['headRefOid']],
                         cwd=root, capture_output=True, text=True)
     if mb.returncode:

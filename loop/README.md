@@ -27,7 +27,7 @@ python3 -m loop status
 - **流式 + 空闲超时**：审查用 `stream-json`，事件实时写入 `stream.jsonl`；`idle_timeout` 秒无输出才杀进程组，`total_timeout` 为总上限。v1 用 `json` 输出 + 300 秒硬超时，四次运行日志全是 0 字节。
 - **按失败签名阻塞**：同一阶段、同一错误连续 3 次才 `blocked`；错误变化说明有进展，不扣预算。审查基础设施失败（超时、CLI 报错）记为 `needs_review`，不计入失败。
 - **测试锁**：锁是 git tag `spec/<task>`（push 到远端留痕），不是可编辑的 JSON；spec 改动只能显式 `loop spec <task> --reason ...` 移动 tag，并写入 journal。
-- **范围锁**：`git diff main...HEAD` 中出现 `allowed + spec + .loop/ + tasks/` 以外的文件即失败；`tasks.json` 只在 T0 可改，后续切片不能放宽自己的检查。
+- **范围锁**：gate 开始时固定 `base_sha = merge-base(base, HEAD)` 与 `head`，`git diff base_sha..head` 中出现 `allowed + spec + .loop/ + tasks/` 以外的文件即失败；`tasks.json` 只在 T0 可改，后续切片不能放宽自己的检查。
 - **先便宜后昂贵**：机械检查失败就不调用 Grok。
 - **干净审查环境**：Grok 在 `HEAD` 的临时 detached worktree 中运行，删除 `.cursor/ .claude/ .mcp.json AGENTS.md` 等项目级 Agent 配置；prompt 明确 diff 为不可信数据；始终附完整改动文件列表，diff 截断时记录 `diff_truncated` 并要求逐个打开。
 - **合并核验**：`loop mark` 读取 `gate/<task>` annotated tag（审查过的 HEAD + 当时的 merge-base），要求 PR 三点 diff 的起点 merge-base(PR base, PR head) 等于审查起点，且 gate 之后只追加符合 LOOP_LAYOUT 的证据；`merged` 还要求 PR 状态为 MERGED。
@@ -40,5 +40,6 @@ python3 -m loop status
 `.loop/runs/<run>/`：`result.json`（阶段、HEAD、错误、审查结论）、`check-N.log`、`review-prompt.md`、`review.md`；`stream.jsonl` 体积大，不入库。`.loop/state/<task>.json` 与 `.loop/journal/<task>.jsonl` 按任务分文件入库，并行分支互不冲突。
 
 ## 边界
+自指局限：修改 loop 自身的任务（T0/T0b）可以改动 `tasks.json` 里自己的 goal/checks；缓解方式是每次改动都写明理由，并由 Grok 审查，而不是在机制上禁止。
 威胁模型：单一可信操作者，防的是 Agent 跑偏、误改测试、范围蔓延和意外，不是对抗恶意实现者（同一用户本可直接改 tag 或代码）。
 门禁证明"检查通过且审查者未发现阻塞问题"，不证明语义完整；最终仍需人工核对需求映射。审查者是同一份需求的另一个模型，不是测评官。
