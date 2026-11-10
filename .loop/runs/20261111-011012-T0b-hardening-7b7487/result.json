@@ -1,0 +1,39 @@
+{
+  "run": "20261111-011012-T0b-hardening-7b7487",
+  "task": "T0b-hardening",
+  "head": "f5a1a12dc633797c6c56f5cfb05d931c4321d0e1",
+  "base": "main",
+  "base_sha": "ddae3c91222af94f1d292ea7f207db9e592e3616",
+  "started": "2026-11-11T01:10:12+1100",
+  "stage": "passed",
+  "errors": [],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "loop/tests",
+        "-t",
+        "."
+      ],
+      "exit": 0,
+      "seconds": 26.3,
+      "log": ".loop/runs/20261111-011012-T0b-hardening-7b7487/check-0.log"
+    }
+  ],
+  "diff_truncated": false,
+  "review": {
+    "verdict": "pass",
+    "blocking": [],
+    "suggestions": [
+      "Bound `gh pr view` in loop mark with a timeout so a credential prompt cannot hang the process; git fetch is already limited to 120s with GIT_TERMINAL_PROMPT=0.",
+      "If the spec-tag push succeeds and the local git tag then fails, surface a refusal: origin has moved and the local tag has not, and the next gate will refuse until loop spec is retried.",
+      "Update the README scope bullet so it matches LOOP_LAYOUT and the fact that T0b can edit loop/tasks.json.",
+      "When a result is already captured, keep a real non-zero exit from wait(); only synthesize exit 0 when the process is actually killed after the grace period."
+    ]
+  },
+  "finished": "2026-11-11T01:34:17+1100"
+}

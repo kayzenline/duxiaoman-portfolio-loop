@@ -3,11 +3,11 @@
   "spec": {
     "loop/tests/test_gate.py": "f3ef970923d1366e9f32815fb32cf0e36c0695fadd9487aa467ab6cb3b2f0e65"
   },
-  "status": "needs_review",
+  "status": "gate_passed",
   "failures": [],
-  "last_run": "20261111-010942-T0b-hardening-4199d5",
+  "last_run": "20261111-011012-T0b-hardening-7b7487",
   "base": "main",
   "base_sha": "ddae3c91222af94f1d292ea7f207db9e592e3616",
-  "last_pass": "20261111-005022-T0b-hardening-2ddbe0",
-  "passed_head": "10211bac0360133fe72cc7395b7d4e1075a8ce19"
+  "last_pass": "20261111-011012-T0b-hardening-7b7487",
+  "passed_head": "f5a1a12dc633797c6c56f5cfb05d931c4321d0e1"
 }
