@@ -66,8 +66,10 @@ def git(root, *args):
 
 
 def changed_files(root, base):
-    committed = git(root, 'diff', '--name-only', f'{base}...HEAD').split()
-    dirty = [line[3:].split(' -> ')[-1] for line in git(root, 'status', '--porcelain').splitlines()]
+    # --no-renames: a rename shows as delete + add, so the source path cannot hide. -z: exact names.
+    committed = [f for f in git(root, 'diff', '--name-only', '--no-renames', '-z', f'{base}...HEAD').split('\0') if f]
+    entries = git(root, 'status', '--porcelain', '--no-renames', '-z').split('\0')
+    dirty = [e[3:] for e in entries if e]
     return sorted(set(committed + dirty))
 
 
