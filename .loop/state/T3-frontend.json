@@ -6,9 +6,10 @@
     "e2e/package.json": "d12c279893e10000fcacca79106a47d343cfd5fa79bb4f92751d3c3fd858b692",
     "e2e/package-lock.json": "aadb80df9ba576745299b3d27d288ebe03bc12dda08970d1970512b100cd13bb"
   },
-  "status": "gate_passed",
+  "status": "merged",
   "failures": [],
   "last_run": "20261111-001322-T3-frontend-92ef26",
   "last_pass": "20261111-001322-T3-frontend-92ef26",
-  "passed_head": "2353f4575e3d49707e4a5ee840aa1be1b448620e"
+  "passed_head": "2353f4575e3d49707e4a5ee840aa1be1b448620e",
+  "pr": "https://github.com/kayzenline/duxiaoman-portfolio-loop/pull/4"
 }

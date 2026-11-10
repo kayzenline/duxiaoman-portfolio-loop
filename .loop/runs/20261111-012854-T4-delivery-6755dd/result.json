@@ -1,0 +1,38 @@
+{
+  "run": "20261111-012854-T4-delivery-6755dd",
+  "task": "T4-delivery",
+  "head": "d1ac92f87c0f51d82c82603d6252477abce61ca3",
+  "started": "2026-11-11T01:28:54+1100",
+  "stage": "passed",
+  "errors": [],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "scripts/check_docs.py"
+      ],
+      "exit": 0,
+      "seconds": 0.1,
+      "log": ".loop/runs/20261111-012854-T4-delivery-6755dd/check-0.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/clean_install_check.sh"
+      ],
+      "exit": 0,
+      "seconds": 5.5,
+      "log": ".loop/runs/20261111-012854-T4-delivery-6755dd/check-1.log"
+    }
+  ],
+  "diff_truncated": false,
+  "review": {
+    "verdict": "pass",
+    "blocking": [],
+    "suggestions": [
+      "scripts/check_docs.py only checks that a cited .loop/runs directory has result.json and that each AC row contains 通过. It does not check that a quoted command output matches the cited file, which is how the earlier unreproducible tail line still passed the mechanical gate.",
+      "scripts/clean_install_check.sh proves restart equality, simulated cash 25000.00, A02 quantity 500, and original 20000.00 / 400 / 400. It does not assert the AC-03 科技 weight 55.00 or A02 market value 25000.00; those are covered by e2e/flow.spec.ts and docs/screenshots/02-compare.png."
+    ]
+  },
+  "finished": "2026-11-11T01:40:17+1100"
+}

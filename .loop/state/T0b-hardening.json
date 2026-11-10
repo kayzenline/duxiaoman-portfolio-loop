@@ -1,0 +1,14 @@
+{
+  "spec_commit": "5394384b798aede1196cdf41e7e072f6c445fd6d",
+  "spec": {
+    "loop/tests/test_gate.py": "f3ef970923d1366e9f32815fb32cf0e36c0695fadd9487aa467ab6cb3b2f0e65"
+  },
+  "status": "merged",
+  "failures": [],
+  "last_run": "20261111-011012-T0b-hardening-7b7487",
+  "base": "main",
+  "base_sha": "ddae3c91222af94f1d292ea7f207db9e592e3616",
+  "last_pass": "20261111-011012-T0b-hardening-7b7487",
+  "passed_head": "f5a1a12dc633797c6c56f5cfb05d931c4321d0e1",
+  "pr": "https://github.com/kayzenline/duxiaoman-portfolio-loop/pull/5"
+}
