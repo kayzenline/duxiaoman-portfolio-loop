@@ -1,0 +1,8 @@
+{
+  "spec_commit": "91164abdcd6a0af662fa1bbd65ea9b8bca8ba376",
+  "spec": {
+    "loop/tests/test_gate.py": "2f65fe396e60abbd0c2b28b0c050a1e58f3f7cf7eeae810916ea1b96eeb577bf"
+  },
+  "status": "spec_locked",
+  "failures": []
+}
