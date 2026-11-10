@@ -35,6 +35,9 @@ class VerdictParsing(unittest.TestCase):
         v = r.parse_verdict('ok\n```json\n{"verdict":"pass","blocking":[]}\n```')
         self.assertEqual((v['verdict'], v['suggestions']), ('pass', []))
 
+    def test_malformed_blocking_entries_are_fail_not_crash(self):
+        self.assertEqual(r.parse_verdict('```json\n{"verdict":"fail","blocking":["x"]}\n```')['verdict'], 'fail')
+
     def test_missing_or_garbage_is_fail(self):
         for t in (None, '', 'looks good to me', '```json\n{nope}\n```', '```json\n{"verdict":"maybe"}\n```'):
             self.assertEqual(r.parse_verdict(t)['verdict'], 'fail', t)
@@ -45,6 +48,12 @@ class ReviewerSafety(unittest.TestCase):
         for flag in ('--force', '-f', '--yolo'):
             with self.assertRaises(r.ReviewError):
                 r.build_argv({'argv': ['cursor-agent', flag], 'model': 'm'}, '/tmp')
+
+    def test_refuses_non_ask_mode(self):
+        for argv in (['cursor-agent', '--mode', 'plan'], ['cursor-agent', '--mode=agent'],
+                     ['cursor-agent', '--mode', 'ask', '--mode', 'agent']):
+            with self.assertRaises(r.ReviewError):
+                r.build_argv({'argv': argv, 'model': 'm'}, '/tmp')
 
     def test_defaults_to_read_only_ask_mode(self):
         argv = r.build_argv({'argv': ['cursor-agent'], 'model': 'm'}, '/tmp')
@@ -137,6 +146,32 @@ class GateFlow(unittest.TestCase):
         self.assertEqual(record['stage'], 'checks')
         self.assertEqual(record['checks'][-1]['exit'], 3)
         self.assertNotIn('review', record)
+
+    def test_same_failing_check_three_times_blocks(self):
+        self.commit('src/bad', 'x\n')
+        statuses = [g.gate(self.root, 'T')[1] for _ in range(3)]
+        self.assertEqual(statuses, ['repair', 'repair', 'blocked'])
+
+    def test_uncommitted_rename_out_of_loop_dir_is_rejected(self):
+        (self.root / '.loop' / 'note.txt').write_text('n\n')
+        self.sh('git', 'add', '-f', '.loop/note.txt')
+        self.sh('git', 'commit', '-qm', 'note')
+        (self.root / 'src').mkdir()
+        self.sh('git', 'mv', '.loop/note.txt', 'src/note.txt')
+        record, status = g.gate(self.root, 'T')
+        self.assertIn(record['stage'], ('scope', 'clean'))
+        self.assertNotEqual(status, 'gate_passed')
+
+    def test_clean_check_sees_both_sides_of_a_rename(self):
+        (self.root / '.loop' / 'runs').mkdir(parents=True, exist_ok=True)
+        (self.root / 'src').mkdir()
+        (self.root / 'src' / 'keep.py').write_text('k\n')
+        self.sh('git', 'add', 'src/keep.py')
+        self.sh('git', 'commit', '-qm', 'keep')
+        self.sh('git', 'mv', 'src/keep.py', 'src/moved.py')
+        self.assertEqual(sorted(g.check_clean(self.root)), [
+            'Uncommitted change, commit before gating: src/keep.py',
+            'Uncommitted change, commit before gating: src/moved.py'])
 
     def test_reviewer_fail_then_same_failure_three_times_blocks(self):
         import os
