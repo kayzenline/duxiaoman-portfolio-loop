@@ -91,6 +91,8 @@ def lock_spec(root, task_id, reason):
     if relock and reason == 'initial spec':
         raise SystemExit(f'{tag} exists; re-locking requires --reason')
     git(root, 'tag', '-f', tag, 'HEAD')
+    if remote_tag(root, tag) is not None:
+        git(root, 'push', '-f', 'origin', f'refs/tags/{tag}')
     head = git(root, 'rev-parse', 'HEAD').strip()
     hashes = {p: sha(root / p) for p in t['spec']}
     entry = state['tasks'].setdefault(task_id, {})
@@ -101,12 +103,25 @@ def lock_spec(root, task_id, reason):
     return hashes
 
 
+def remote_tag(root, tag):
+    """Commit the tag points to on origin; None if there is no origin (e.g. tests)."""
+    if subprocess.run(['git', 'remote', 'get-url', 'origin'], cwd=root, capture_output=True).returncode:
+        return None
+    out = subprocess.run(['git', 'ls-remote', 'origin', f'refs/tags/{tag}^{{}}', f'refs/tags/{tag}'],
+                         cwd=root, capture_output=True, text=True).stdout.split('\n')
+    refs = dict(reversed(line.split('\t')) for line in out if '\t' in line)
+    return refs.get(f'refs/tags/{tag}^{{}}') or refs.get(f'refs/tags/{tag}') or ''
+
+
 def check_spec(root, task):
     tag = spec_tag(task['id'])
     if not git(root, 'tag', '--list', tag).strip():
         return [f'Spec not locked; run `python -m loop spec {task["id"]}` first']
     if subprocess.run(['git', 'merge-base', '--is-ancestor', tag, 'HEAD'], cwd=root).returncode:
         return [f'{tag} is not an ancestor of HEAD']
+    remote = remote_tag(root, tag)
+    if remote is not None and remote != git(root, 'rev-parse', f'{tag}^{{commit}}').strip():
+        return [f'Local {tag} differs from origin; spec lock was moved without being pushed']
     changed = git(root, 'diff', '--name-only', tag, '--', *task['spec']).split()
     return [f'Acceptance test changed since lock ({tag}): {f}' for f in changed]
 
@@ -179,13 +194,22 @@ DIFF:
 """
 
 
+AGENT_CONFIG = {'.cursor', '.claude', '.vscode', '.mcp.json', 'AGENTS.md', 'CLAUDE.md', '.cursorrules'}
+
+
 def clean_checkout(root, head, dest):
-    """Detached worktree of HEAD without project agent config, so --trust trusts nothing the implementer planted."""
+    """Detached worktree of HEAD with every project-level agent config removed at any depth,
+    so `--trust` trusts nothing the implementer planted. Fails closed if anything survives."""
     git(root, 'worktree', 'add', '--detach', '-f', str(dest), head)
-    for cfg_dir in ('.cursor', '.claude', '.vscode'):
-        shutil.rmtree(dest / cfg_dir, ignore_errors=True)
-    for f in ('.mcp.json', 'AGENTS.md', 'CLAUDE.md', '.cursorrules'):
-        (dest / f).unlink(missing_ok=True)
+    for path in sorted(dest.rglob('*'), key=lambda p: len(p.parts), reverse=True):
+        if path.name in AGENT_CONFIG and '.git' not in path.relative_to(dest).parts:
+            if path.is_symlink() or path.is_file():
+                path.unlink()
+            else:
+                shutil.rmtree(path)
+    leftover = [p for p in dest.rglob('*') if p.name in AGENT_CONFIG]
+    if leftover:
+        raise reviewer.ReviewError(f'Could not sanitize reviewer workspace: {leftover[:3]}')
 
 
 def gate(root, task_id, base='main', skip_review=False):
@@ -237,6 +261,7 @@ def gate(root, task_id, base='main', skip_review=False):
 
     if record['stage'] == 'passed':
         entry.update(status='gate_passed', failures=[], last_pass=run_id, passed_head=record['head'])
+        git(root, 'tag', '-f', f'gate/{task_id}', record['head'])  # authoritative pass record
     elif record['stage'] in ('review_skipped', 'review_infra'):
         entry['status'] = 'needs_review'
     else:

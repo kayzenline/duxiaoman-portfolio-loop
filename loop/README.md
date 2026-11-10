@@ -33,8 +33,11 @@ python3 -m loop status
 - **合并核验**：`loop mark` 通过 `gh pr view` 核对 PR head == `passed_head`（之后只允许追加 `.loop/` 证据提交），`merged` 还要求 PR 状态为 MERGED。
 - **审查结论**：只取 Grok 回复中最后一个 ```json 块；缺失、格式错误或有 blocking 一律判 fail。
 
+- **通过记录**：gate 通过时打 `gate/<task>` tag 于被审查的 HEAD；`mark` 以 tag 为准，state 文件只作参考。spec tag 存在远端时，本地 tag 必须与远端一致。
+
 ## 证据
 `.loop/runs/<run>/`：`result.json`（阶段、HEAD、错误、审查结论）、`check-N.log`、`review-prompt.md`、`review.md`；`stream.jsonl` 体积大，不入库。`.loop/state/<task>.json` 与 `.loop/journal/<task>.jsonl` 按任务分文件入库，并行分支互不冲突。
 
 ## 边界
+威胁模型：单一可信操作者，防的是 Agent 跑偏、误改测试、范围蔓延和意外，不是对抗恶意实现者（同一用户本可直接改 tag 或代码）。
 门禁证明"检查通过且审查者未发现阻塞问题"，不证明语义完整；最终仍需人工核对需求映射。审查者是同一份需求的另一个模型，不是测评官。

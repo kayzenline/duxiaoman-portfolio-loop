@@ -50,7 +50,11 @@ def main(argv=None):
             sys.exit('Refusing: task has not passed the gate')
         pr = json.loads(subprocess.run(['gh', 'pr', 'view', a.pr, '--json', 'headRefOid,state,url'],
                                        check=True, capture_output=True, text=True, cwd=root).stdout)
-        passed = e.get('passed_head')
+        tag = subprocess.run(['git', 'rev-parse', '--verify', '-q', f'gate/{a.task}^{{commit}}'],
+                             cwd=root, capture_output=True, text=True).stdout.strip()
+        if not tag or tag != e.get('passed_head'):
+            sys.exit(f'Refusing: gate/{a.task} tag missing or disagrees with state; re-run the gate')
+        passed = tag
         if pr['headRefOid'] != passed:
             # Allowed: commits after the pass that only add gate evidence under .loop/.
             extra = subprocess.run(['git', 'diff', '--name-only', f'{passed}..{pr["headRefOid"]}'],
