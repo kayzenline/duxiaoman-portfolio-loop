@@ -1,9 +1,9 @@
 {
-  "spec_commit": "93e6cbe80d8e42d34d3fd1638e086ebb6ed27a0e",
+  "spec_commit": "5394384b798aede1196cdf41e7e072f6c445fd6d",
   "spec": {
-    "loop/tests/test_gate.py": "42ffae77cbfa1ff26b1e35e37ae5a0f272ad49b83612088671205577225e8e6f"
+    "loop/tests/test_gate.py": "f3ef970923d1366e9f32815fb32cf0e36c0695fadd9487aa467ab6cb3b2f0e65"
   },
-  "status": "gate_passed",
+  "status": "spec_locked",
   "failures": [],
   "last_run": "20261111-005022-T0b-hardening-2ddbe0",
   "base": "main",
