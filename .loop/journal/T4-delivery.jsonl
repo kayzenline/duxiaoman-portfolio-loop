@@ -1,3 +1,4 @@
 {"at": "2026-11-11T00:31:42+1100", "task": "T4-delivery", "commit": "99abfe4ccc5d467b20eadfc770a92f2df2a82416", "event": "spec_locked", "reason": "initial spec"}
 {"at": "2026-11-11T00:31:50+1100", "task": "T4-delivery", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-003144-T4-delivery-4887d3", "head": "a81447739f21ca8b7fd0111bc61d8c6a148eec15"}
 {"at": "2026-11-11T00:49:03+1100", "task": "T4-delivery", "event": "gate", "stage": "passed", "status": "gate_passed", "run": "20261111-003155-T4-delivery-d8583a", "head": "00a380eda940417d251c6596b79f9a595dba7d68"}
+{"at": "2026-11-11T00:52:31+1100", "task": "T4-delivery", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-005224-T4-delivery-ea6321", "head": "3fed0159b05e52f2c6158530659aba38e257a7b7"}
