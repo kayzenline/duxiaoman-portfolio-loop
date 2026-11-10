@@ -11,7 +11,7 @@
     ],
     "model": "grok-4.7-high",
     "idle_timeout": 240,
-    "total_timeout": 1500
+    "total_timeout": 2400
   },
   "tasks": [
     {

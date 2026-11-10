@@ -1,0 +1,29 @@
+{
+  "run": "20261110-230654-T0-loop-b2a309",
+  "task": "T0-loop",
+  "head": "787165d0b9c7f5060ee3667ad2fc8fa234906119",
+  "started": "2026-11-10T23:06:54+1100",
+  "stage": "review_infra",
+  "errors": [
+    "Reviewer exceeded 1500s"
+  ],
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "loop/tests",
+        "-t",
+        "."
+      ],
+      "exit": 0,
+      "seconds": 9.3,
+      "log": ".loop/runs/20261110-230654-T0-loop-b2a309/check-0.log"
+    }
+  ],
+  "diff_truncated": true,
+  "finished": "2026-11-10T23:32:05+1100"
+}
