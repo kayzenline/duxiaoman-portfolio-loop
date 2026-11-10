@@ -9,3 +9,4 @@
 {"at": "2026-11-11T01:27:49+1100", "task": "T4-delivery", "event": "gate", "stage": "review", "status": "repair", "run": "20261111-012002-T4-delivery-0162c4", "head": "15dbafa4d8bf9d7a7067149b37c23d4d61d70d85"}
 {"at": "2026-11-11T01:28:51+1100", "task": "T4-delivery", "event": "gate", "stage": "review_skipped", "status": "needs_review", "run": "20261111-012845-T4-delivery-44070e", "head": "1aba2c887021bb36f630bec40bff3e516554473d"}
 {"at": "2026-11-11T01:40:17+1100", "task": "T4-delivery", "event": "gate", "stage": "passed", "status": "gate_passed", "run": "20261111-012854-T4-delivery-6755dd", "head": "d1ac92f87c0f51d82c82603d6252477abce61ca3"}
+{"at": "2026-11-11T01:42:25+1100", "task": "T4-delivery", "event": "merged", "pr": "https://github.com/kayzenline/duxiaoman-portfolio-loop/pull/6"}
