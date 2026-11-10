@@ -1,0 +1,14 @@
+{
+  "run": "20261110-230625-T0-loop-2631d4",
+  "task": "T0-loop",
+  "head": "a077594a32ab7f5e807d55e0c4ede3f586d1e405",
+  "started": "2026-11-10T23:06:25+1100",
+  "stage": "scope",
+  "errors": [
+    "Out of scope change: .loop/runs/20261110-224651-T0-loop-7ccc68/check-0.log",
+    "Out of scope change: .loop/runs/20261110-224651-T0-loop-7ccc68/result.json",
+    "Out of scope change: .loop/runs/20261110-224651-T0-loop-7ccc68/review-prompt.md",
+    "Out of scope change: .loop/runs/20261110-224651-T0-loop-7ccc68/review.md"
+  ],
+  "finished": "2026-11-10T23:06:26+1100"
+}

@@ -90,7 +90,8 @@
       "goal": "React+TypeScript UI served by the backend: overview (totals, holdings, weights, industry distribution, snapshot time, alerts with object/actual/threshold), ordered op builder, original-vs-simulated comparison, explicit loading/empty/error states, save with name, list and reopen saved scenarios. All numbers come from the backend; the UI never recomputes business values.",
       "allowed": [
         "frontend/*",
-        "backend/portfolio/*"
+        "backend/portfolio/*",
+        "e2e/*"
       ],
       "spec": [
         "e2e/flow.spec.ts"

@@ -16,7 +16,7 @@ from pathlib import Path
 
 from . import reviewer
 
-ALWAYS_ALLOWED = ['.loop/state/*', '.loop/journal/*', 'tasks/*']
+ALWAYS_ALLOWED = ['.loop/state/*', '.loop/journal/*', '.loop/runs/*', 'tasks/*']  # gate-written evidence
 MAX_SAME_FAILURE = 3
 DIFF_LIMIT = 60_000
 
